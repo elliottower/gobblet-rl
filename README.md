@@ -1,6 +1,8 @@
 # gobblet-rl
 
-This is an implementation of the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game as a [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) game.
+Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo).
+
+![Gobblet game](gobblet.jpg?raw=true "Gobblet game")
 
 ## Installation
 
