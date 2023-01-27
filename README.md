@@ -28,9 +28,7 @@ In a Python shell, run the following:
 
 ```python
 import pettingzoo
-from gobblet gobblet_v0
-
--rl
+from gobblet import gobblet_v0
 env = gobblet_v0.env()
 ```
 
