@@ -35,7 +35,7 @@ from gobblet import gobblet_v0
 env = gobblet_v0.env()
 ```
 
-### Train a basic agent with Tianshou
+### Train a DQL agent with Tianshou
 
 In the terminal, run the following:
 ```
