@@ -1,0 +1,7 @@
+gym==0.26.1
+gymnasium==0.27.1
+numpy==1.23.5
+PettingZoo==1.22.3
+setuptools==65.6.3
+tianshou==0.4.11
+torch==1.12.1

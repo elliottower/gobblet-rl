@@ -274,6 +274,14 @@ class raw_env(AECEnv):
             else:
                 return "{}".format(int(input))
 
+        def getSymbol(input):
+            if input == 0:
+                return "- "
+            if input > 0:
+                return "+{}".format(int((input + 1) // 2))
+            else:
+                return "{}".format(int((input) // 2))
+
 
         if self.render_mode == "human":
             board = list(map(getSymbol, self.board.get_flatboard()))
@@ -291,7 +299,7 @@ class raw_env(AECEnv):
             print()
 
         if self.render_mode == "human_full":
-            board = list(map(getSymbol, self.board.squares))
+            board = list(map(getSymbolFull, self.board.squares))
             print(" " * 9 + "SMALL" + " " * 9 + "  " +
                   " " * 10 + "MED" + " " * 10 + "  " +
                   " " * 9 + "LARGE" + " " * 9 + "  ")
