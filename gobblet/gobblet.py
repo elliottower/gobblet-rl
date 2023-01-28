@@ -103,10 +103,11 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 
 from board import Board
+from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 
-def env(render_mode=None):
-    env = raw_env(render_mode=render_mode)
+def env(render_mode=None, debug=None):
+    env = raw_env(render_mode=render_mode, debug=debug)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
@@ -114,16 +115,17 @@ def env(render_mode=None):
     env = wrappers.OrderEnforcingWrapper(env)
     return env
 
+parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
     metadata = {
         "render_modes": ["human", "human_full"],
         "name": "gobblet_v0",
-        "is_parallelizable": False,
+        "is_parallelizable": True,
         "render_fps": 1,
     }
 
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode=None, debug=False):
         super().__init__()
         self.board = Board()
 
@@ -152,6 +154,7 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.reset()
 
         self.render_mode = render_mode
+        self.debug = debug
 
     # Key
     # ----
@@ -166,7 +169,8 @@ class raw_env(AECEnv):
     def observe(self, agent): #TODO: test this
         board = self.board.squares.reshape(3, 3, 3)
         if agent == "player_1":
-            board_vals = board * -1 # Swap the signs if the current agent is player_1 rather than player_0
+            board = board * -1 # Swap the signs if the current agent is player_1 rather than player_0
+            # TODO: do we need to do this? might make it harder to debug
 
         # Chess way of representing observations: specific channel for each color piece (e.g., two for each white small piece)
         layers = []
@@ -210,7 +214,12 @@ class raw_env(AECEnv):
         ):
             return self._was_dead_step(action)
         # check if input action is a valid move (0 == empty spot)
-        assert self.board.is_legal(action), "played illegal move"
+        # assert self.board.is_legal(action), "played illegal move"
+        if not self.board.is_legal(action):
+            print("piece: ", self.board.get_piece_from_action(action))
+            print("piece_size: ", self.board.get_piece_size_from_action(action))
+            print("pos: ", self.board.get_pos_from_action(action))
+            raise Exception()
         # play turn
         self.board.play_turn(self.agents.index(self.agent_selection), action)
 
@@ -241,8 +250,11 @@ class raw_env(AECEnv):
         self.agent_selection = next_agent
 
         self._accumulate_rewards()
+        self.turn += 1
+        self.action = action
         if self.render_mode == "human" or "human_full":
             self.render()
+
 
     def reset(self, seed=None, return_info=False, options=None):
         # reset environment
@@ -258,6 +270,8 @@ class raw_env(AECEnv):
         self._agent_selector.reinit(self.agents)
         self._agent_selector.reset()
         self.agent_selection = self._agent_selector.reset()
+        self.turn = 0
+        self.action = -1
 
     def render(self):
         if self.render_mode is None:
@@ -266,7 +280,7 @@ class raw_env(AECEnv):
             )
             return
 
-        def getSymbol(input):
+        def getSymbolFull(input):
             if input == 0:
                 return "- "
             if input > 0:
@@ -281,9 +295,14 @@ class raw_env(AECEnv):
                 return "+{}".format(int((input + 1) // 2))
             else:
                 return "{}".format(int((input) // 2))
-
-
+        pos = self.action % 9
+        piece = (self.action // 9) + 1
         if self.render_mode == "human":
+            piece = (piece + 1) // 2
+        print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
+        if self.debug:
+            self.board.print_pieces()
+        if self.render_mode == "human" or self.debug:
             board = list(map(getSymbol, self.board.get_flatboard()))
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
             print(f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  ")

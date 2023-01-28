@@ -56,6 +56,8 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--test-num", type=int, default=10)
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--render", type=float, default=0.1)
+    parser.add_argument("--render_mode", type=str, default="human", help="options: human, human_full")
+    parser.add_argument("--debug", action="store_true", help="enable to print extra debugging info")
     parser.add_argument(
         "--win-rate",
         type=float,
@@ -150,8 +152,8 @@ def get_agents(
     return policy, optim, env.agents
 
 
-def get_env(render_mode=None):
-    return PettingZooEnv(gobblet_v0.env(render_mode=render_mode))
+def get_env(render_mode=None, debug=False):
+    return PettingZooEnv(gobblet_v0.env(render_mode=render_mode, debug=debug))
 
 
 def train_agent(
@@ -244,31 +246,14 @@ def watch(
     agent_learn: Optional[BasePolicy] = None,
     agent_opponent: Optional[BasePolicy] = None,
 ) -> None:
-    env = DummyVectorEnv([lambda: get_env(render_mode="human")])
+    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, debug=args.debug)])
     policy, optim, agents = get_agents(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
     policy.eval()
     policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
     collector = Collector(policy, env, exploration_noise=True)
-    result = collector.collect(n_episode=1, render=args.render)
-    rews, lens = result["rews"], result["lens"]
-    print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
-
-# Allows the user to input moves and play vs the learned agent
-def play(
-    args: argparse.Namespace = get_args(),
-    agent_learn: Optional[BasePolicy] = None,
-    agent_opponent: Optional[BasePolicy] = None,
-) -> None:
-    env = DummyVectorEnv([lambda: get_env(render_mode="human")])
-    policy, optim, agents = get_agents(
-        args, agent_learn=agent_learn, agent_opponent=agent_opponent
-    )
-    policy.eval()
-    policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
-    collector = Collector(policy, env, exploration_noise=True)
-    result = collector.collect(n_episode=1, render=args.render)
+    result = collector.collect(n_episode=1, render=0)
     rews, lens = result["rews"], result["lens"]
     print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
 
@@ -277,4 +262,21 @@ if __name__ == "__main__":
     args = get_args()
     result, agent = train_agent(args)
     watch(args, agent)
-    play(args, agent)
+    # play(args, agent)
+
+# Allows the user to input moves and play vs the learned agent
+def play(
+        args: argparse.Namespace = get_args(),
+        agent_learn: Optional[BasePolicy] = None,
+        agent_opponent: Optional[BasePolicy] = None,
+) -> None:
+    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode)])
+    policy, optim, agents = get_agents(
+        args, agent_learn=agent_learn, agent_opponent=agent_opponent
+    )
+    policy.eval()
+    policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+    collector = Collector(policy, env, exploration_noise=True)
+    result = collector.collect(n_episode=1, render=args.render)
+    rews, lens = result["rews"], result["lens"]
+    print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")

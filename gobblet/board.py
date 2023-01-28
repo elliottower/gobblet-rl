@@ -76,7 +76,6 @@ class Board:
         board = self.squares.reshape(3, 9)
 
         # Check if this piece has been placed (if the piece number occurs anywhere on the level of that piece size)
-        # If this piece has not been placed yet, check that it
         if any(board[piece_size-1] == piece):
             current_loc = np.where(board[piece_size-1] == piece)[0] # Returns array of values where piece is placed
             if len(current_loc) > 1: # DEBUG ONLY
@@ -88,7 +87,7 @@ class Board:
                 # print("--ERROR-- CURRENT LOCATION COVERED: ", current_loc)
                 return False
 
-        # If this piece has been placed
+        # If this piece has not been placed
         # Check if the spot on the flat 3x3 board is open (we can definitely place in that case)
         flatboard = self.get_flatboard()
         if flatboard[pos] == 0:
@@ -110,6 +109,8 @@ class Board:
     # Update the board with an agent's move
     def play_turn(self, agent, action):
         piece = self.get_piece_from_action(action)
+        if agent == 1:
+            piece = piece * -1
         index = self.get_index_from_action(action)
 
         # First: check if a move is legal or not
@@ -120,10 +121,7 @@ class Board:
         if piece in self.squares:
             old_index = np.where(self.squares == piece)[0][0]
             self.squares[old_index] = 0
-        if agent == 0:
-            self.squares[index] = piece
-        elif agent == 1:
-            self.squares[index] = -1 * piece
+        self.squares[index] = piece
         return
 
     # TODO: check if other components require the numbers to be 1 and 2 rather than -6 through 6
@@ -201,12 +199,16 @@ class Board:
 
 # DEBUG
     def print_pieces(self):
-        open_squares = [i for i in range(len(self.squares)) if self.squares[i] == 0]
-        occupied_squares = [i for i in range(len(self.squares)) if self.squares[i] != 0]
-        movable_squares = [i for i in occupied_squares if self.check_covered()[i] == 0]
+        open_indices = [i for i in range(len(self.squares)) if self.squares[i] == 0]
+        open_squares = [np.where(self.get_flatboard() == 0)[0]]
+        occupied_squares = [i % 9 for i in range(len(self.squares)) if self.squares[i] != 0] # List with entries 0-9
+        movable_squares = [i % 9 for i in occupied_squares if self.check_covered()[i] == 0] # List with entries 0-9
+        covered_squares = [i % 9 for i in np.where(self.check_covered() == 1)[0] ] # List with entries 0-9
+        print("open_indices: ", open_indices)
         print("open_squares: ", open_squares)
         print("squares with pieces: ", occupied_squares)
         print("squares with uncovered pieces: ", movable_squares)
+        print("squares with covered pieces: ", covered_squares)
 
     def __str__(self):
         return str(self.squares)

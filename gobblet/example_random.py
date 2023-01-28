@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # train the agent and watch its performance in a match!
     args = get_args()
 
-    env = gobblet_v0.env(render_mode=args.render_mode)
+    env = gobblet_v0.env(render_mode=args.render_mode, debug=True)
     env.reset()
     turn = 0
     for agent in env.agent_iter():
@@ -34,9 +34,5 @@ if __name__ == "__main__":
         else:
             if args.agent_type == "random":
                 action = env.action_space(agent).sample()
-            pos = action % 9; piece = (action // 9) + 1
-            turn += 1
-            if env.render_mode == "human":
-                piece = (piece + 1) // 2
-            print(f"TURN: {turn}, AGENT: {agent}, ACTION: {action}, POSITION: {pos}, PIECE: {piece}")
             env.step(action)
+

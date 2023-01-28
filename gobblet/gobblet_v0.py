@@ -1,1 +1,1 @@
-from gobblet import env, raw_env  # noqa: 401
+from gobblet import env, raw_env, parallel_env # noqa: 401
