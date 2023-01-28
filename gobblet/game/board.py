@@ -71,20 +71,18 @@ class Board:
         pos = self.get_pos_from_action(action) # [0-8]
         piece = self.get_piece_from_action(action) # [1-6]
         piece_size = self.get_piece_size_from_action(action) # [1-3]
-        index = self.get_index_from_action(action) # [0-26]
 
         board = self.squares.reshape(3, 9)
 
         # Check if this piece has been placed (if the piece number occurs anywhere on the level of that piece size)
         if any(board[piece_size-1] == piece):
             current_loc = np.where(board[piece_size-1] == piece)[0] # Returns array of values where piece is placed
-            if len(current_loc) > 1: # DEBUG ONLY
+            if len(current_loc) > 1:
                 print("--ERROR-- PIECE HAS BEEN USED TWICE")
             else:
                 current_loc = current_loc[0] # Current location [0-27]
             # If this piece is currently covered, moving it is not a legal action
             if self.check_covered()[current_loc] == 1:
-                # print("--ERROR-- CURRENT LOCATION COVERED: ", current_loc)
                 return False
 
         # If this piece has not been placed
@@ -96,14 +94,8 @@ class Board:
             existing_piece_number = flatboard[pos] # [1-6]
             existing_piece_size = (abs(existing_piece_number) + 1) // 2 # [1-3]
             if piece_size > existing_piece_size:
-                return True # This piece can be gobbled
+                return True
             else:
-                # print("--ERROR-- CURRENT PIECE CANNOT BE GOBBLED")
-                # print("existing piece number: ", existing_piece_number)
-                # print("existing piece size: ", existing_piece_size)
-                # print("piece size: ", piece_size)
-                # print("position attempted: ", pos)
-                # print("index attempted: ", index)
                 return False
 
     # Update the board with an agent's move
@@ -124,7 +116,6 @@ class Board:
         self.squares[index] = piece
         return
 
-    # TODO: check if other components require the numbers to be 1 and 2 rather than -6 through 6
     # Expects flat [9,] length array, from tic-tac-toe code
     def calculate_winners(self):
         winning_combinations = []
@@ -161,9 +152,9 @@ class Board:
         return flatboard
 
     # returns:
-    # -1 for no winner
-    # 0 -- agent 0 wins
+    # 0 for no winner
     # 1 -- agent 1 wins
+    # -1 -- agent 2 wins
     def check_for_winner(self):
         winner = 0
         flatboard = self.get_flatboard()

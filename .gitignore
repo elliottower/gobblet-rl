@@ -1,4 +1,3 @@
-/=requirements.in
 /dist/
 /dist/gobblet-rl-0.0.1.tar.gz
 /dist/gobblet_rl-0.0.1-py3-none-any.whl
@@ -8,8 +7,8 @@
 .idea/
 gobblet/.DS_Store
 /tests/test.py
-/APItest.py
 /gobblet/__pycache__/
-/gobblet/example_cleanRL.py
-/gobblet/example_cleanRL_batch.py
+/gobblet/examples/example_cleanRL.py
+/gobblet/examples/example_cleanRL_batch.py
 /tests/.pytest_cache/
+/gobblet/models/

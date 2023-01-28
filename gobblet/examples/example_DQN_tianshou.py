@@ -29,7 +29,7 @@ from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
 from torch.utils.tensorboard import SummaryWriter
 
-import gobblet_v0
+from gobblet import gobblet_v0
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -58,6 +58,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--render", type=float, default=0.1)
     parser.add_argument("--render_mode", type=str, default="human", help="options: human, human_full")
     parser.add_argument("--debug", action="store_true", help="enable to print extra debugging info")
+    parser.add_argument("--self_play", action="store_true", help="enable training via self-play (as opposed to fixed opponent)")
     parser.add_argument(
         "--win-rate",
         type=float,
@@ -138,7 +139,9 @@ def get_agents(
             agent_learn.load_state_dict(torch.load(args.resume_path))
 
     if agent_opponent is None:
-        if args.opponent_path:
+        if args.self_play:
+            agent_opponent = deepcopy(agent_learn)
+        elif args.opponent_path:
             agent_opponent = deepcopy(agent_learn)
             agent_opponent.load_state_dict(torch.load(args.opponent_path))
         else:
@@ -211,8 +214,15 @@ def train_agent(
     def train_fn(epoch, env_step):
         policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_train)
 
+    def train_fn_selfplay(epoch, env_step):
+        policy.policies[agents[:]].set_eps(args.eps_train) # Same as train_fn but for both agents instead of only learner
+
     def test_fn(epoch, env_step):
         policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+
+    def test_fn_selfplay(epoch, env_step):
+        policy.policies[agents[:]].set_eps(args.eps_test) # Same as test_fn but for both agents instead of only learner
+
 
     def reward_metric(rews):
         return rews[:, args.agent_id - 1]
@@ -227,8 +237,8 @@ def train_agent(
         args.step_per_collect,
         args.test_num,
         args.batch_size,
-        train_fn=train_fn,
-        test_fn=test_fn,
+        train_fn=train_fn if not args.self_play else train_fn_selfplay,
+        test_fn=test_fn if not args.self_play else train_fn_selfplay,
         stop_fn=stop_fn,
         save_best_fn=save_best_fn,
         update_per_step=args.update_per_step,
@@ -251,11 +261,24 @@ def watch(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
     policy.eval()
-    policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+    if not args.self_play:
+        policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+    else:
+        policy.policies[agents[:]].set_eps(args.eps_test)
     collector = Collector(policy, env, exploration_noise=True)
     result = collector.collect(n_episode=1, render=0)
     rews, lens = result["rews"], result["lens"]
     print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
+
+def watch_selfplay(args, agent):
+    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, debug=args.debug)])
+    agent.set_eps(args.eps_test)
+    policy = MultiAgentPolicyManager([agent, deepcopy(agent)], env) # fixed here
+    policy.eval()
+    collector = Collector(policy, env)
+    result = collector.collect(n_episode=1, render=args.render)
+    rews, lens = result["rews"], result["lens"]
+    print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()}")
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!

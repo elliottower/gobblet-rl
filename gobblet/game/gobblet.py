@@ -14,7 +14,7 @@ This environment is part of the <a href='..'>classic environments</a>. Please re
 | Actions            | Discrete                           |
 | Parallel API       | Yes                                |
 | Manual Control     | No                                 |
-| Agents             | `agents= ['player_0', 'player_1']` |
+| Agents             | `agents= ['player_1', 'player_2']` |
 | Agents             | 2                                  |
 | Action Shape       | Discrete(53)                       |
 | Action Values      | Discrete(53)                       |
@@ -128,7 +128,7 @@ class raw_env(AECEnv):
         super().__init__()
         self.board = Board()
 
-        self.agents = [f"player_{i}" for i in range(2)]
+        self.agents = ["player_1", "player_2"]
         self.possible_agents = self.agents[:]
 
         self.action_spaces = {i: spaces.Discrete(54) for i in self.agents}
@@ -167,9 +167,8 @@ class raw_env(AECEnv):
     #  [2,1,0]]
     def observe(self, agent): #TODO: test this
         board = self.board.squares.reshape(3, 3, 3)
-        if agent == "player_1":
-            board = board * -1 # Swap the signs if the current agent is player_1 rather than player_0
-            # TODO: do we need to do this? might make it harder to debug
+        if self.agents.index(agent) == 1:
+            board = board * -1 # Swap the signs on the board for the two different agents
 
         # Chess way of representing observations: specific channel for each color piece (e.g., two for each white small piece)
         layers = []

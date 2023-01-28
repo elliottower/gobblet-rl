@@ -1,7 +1,7 @@
-import gobblet_v0
+from gobblet import gobblet_v0
 import argparse
-import torch
-import os
+import numpy as np
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -34,5 +34,8 @@ if __name__ == "__main__":
         else:
             if args.agent_type == "random":
                 action = env.action_space(agent).sample()
+            if args.agent_type == "random_admissable":
+                action_mask = observation.action_mask
+                action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
             env.step(action)
 

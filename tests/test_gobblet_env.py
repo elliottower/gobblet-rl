@@ -51,6 +51,17 @@ def test_max_cycles(env):
     pettingzoo.test.max_cycles_test(env)
 
 
+# Note: this test sometimes fails due to empty possible actions list, re-run if it fails
+def test_performance_benchmark(env):
+    "Run PettingZoo performance benchmark on the env"
+    env = gobblet_v0.env()
+    pettingzoo.test.performance_benchmark(env)
+
+
+def test_save_obs(env):
+    pettingzoo.test.test_save_obs(env)
+
+
 def test_render(env):
     "Verify that render() executes without error for human-readable output"
     pettingzoo.test.render_test(gobblet_v0.raw_env)
@@ -59,16 +70,3 @@ def test_render(env):
 def test_render_human(env):
     "Verify that render() executes without error for human-readable output"
     env.render()
-
-
-# Note: this test sometimes fails due to empty possible actions list, re-run if it fails
-def test_performance_benchmark(env):
-    "Run PettingZoo performance benchmark on the env"
-    env = gobblet_v0.env()
-    pettingzoo.test.performance_benchmark(env)
-
-def test_save_obs(env):
-    pettingzoo.test.test_save_obs(env)
-
-
-
