@@ -34,5 +34,7 @@ if __name__ == "__main__":
             if args.agent_type == "random":
                 action = env.action_space(agent).sample()
             pos = action % 9; piece = (action // 9) + 1
+            if env.render_mode == "human":
+                piece = (piece + 1) // 2
             print(f"AGENT: {agent}, ACTION: {action}, POSITION: {pos}, PIECE: {piece}")
             env.step(action)
