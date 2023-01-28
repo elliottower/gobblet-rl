@@ -1,6 +1,6 @@
 # gobblet-rl
 
-[![PyPI v0.0.1](https://img.shields.io/pypi/v/gobblet-rl)](https://pypi.org/project/gobblet-rl/0.0.1/)
+[![PyPI v0.0.1](https://img.shields.io/pypi/v/gobblet-rl)](https://pypi.org/project/gobblet-rl/)
 
 
 Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo).
