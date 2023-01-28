@@ -23,6 +23,7 @@ if __name__ == "__main__":
 
     env = gobblet_v0.env(render_mode=args.render_mode)
     env.reset()
+    turn = 0
     for agent in env.agent_iter():
         observation, reward, termination, truncation, info = env.last()
         if termination:
@@ -34,7 +35,8 @@ if __name__ == "__main__":
             if args.agent_type == "random":
                 action = env.action_space(agent).sample()
             pos = action % 9; piece = (action // 9) + 1
+            turn += 1
             if env.render_mode == "human":
                 piece = (piece + 1) // 2
-            print(f"AGENT: {agent}, ACTION: {action}, POSITION: {pos}, PIECE: {piece}")
+            print(f"TURN: {turn}, AGENT: {agent}, ACTION: {action}, POSITION: {pos}, PIECE: {piece}")
             env.step(action)

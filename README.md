@@ -56,21 +56,21 @@ python gobblet/example_random.py --render_mode="human" --agent_type="random"
 
 ``--render_mode="human"`` will render a 3x3 board only showing the topmost pieces (pieces which are covered by others, or 'gobbled', are hidden):
 ```
-AGENT: player_1, ACTION: 50, POSITION: 5, PIECE: 6
+TURN: 2, AGENT: player_1, ACTION: 51, POSITION: 6, PIECE: 3
        |       |       
-  -    |   -   |   -   
+  -    |   -   |   -3  
+_______|_______|_______
+       |       |       
+  -    |   -   |   +2  
 _______|_______|_______
        |       |       
   -    |   -   |   -   
-_______|_______|_______
-       |       |       
-  +5   |   -6  |   -   
        |       |       
 ```
 
 ``--render_mode="human_full"`` will render three different 3x3 boards representing the small, medium and large pieces. This gives full information about pieces which are covered or 'gobbled' by other pieces. :
 ```
-AGENT: player_0, ACTION: 42, POSITION: 6, PIECE: 5
+TURN: 3, AGENT: player_0, ACTION: 42, POSITION: 6, PIECE: 5
          SMALL                     MED                     LARGE           
        |       |                |       |                |       |       
   -    |   -   |   -       -    |   -   |   -       -    |   -   |   +5  
