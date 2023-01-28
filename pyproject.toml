@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gobblet-rl"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Elliot Tower", email="elliot@elliottower.com" },
 ]
@@ -24,7 +24,8 @@ dependencies=[
     "pettingzoo>=1.22.3",
     "setuptools>=65.6.3",
     "tianshou>=0.4.11",
-    "torch>=1.12.1"
+    "torch>=1.12.1",
+    "pytest>=7.1.2"
 ]
 
 [project.urls]

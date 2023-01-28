@@ -8,7 +8,8 @@
 .idea/
 gobblet/.DS_Store
 /tests/test.py
-/tests/APItest.py
+/APItest.py
 /gobblet/__pycache__/
 /gobblet/example_cleanRL.py
 /gobblet/example_cleanRL_batch.py
+/tests/.pytest_cache/

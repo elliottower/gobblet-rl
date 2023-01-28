@@ -101,9 +101,8 @@ from gymnasium import spaces
 
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
-
-from board import Board
 from pettingzoo.utils.conversions import parallel_wrapper_fn
+from .board import Board
 
 
 def env(render_mode=None, debug=None):
