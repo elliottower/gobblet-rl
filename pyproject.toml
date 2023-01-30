@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gobblet-rl"
-version = "1.0.2"
+version = "1.1.0"
 authors = [
   { name="Elliot Tower", email="elliot@elliottower.com" },
 ]
@@ -18,14 +18,17 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies=[
-    "gym>=0.26.1",
-    "gymnasium>=0.27.1",
-    "numpy>=1.23.5",
-    "pettingzoo>=1.22.3",
+    "gym==0.26.1",
+    "gymnasium==0.27.1",
+    "numpy==1.23.5",
+    "pettingzo==1.22.3",
     "setuptools>=65.6.3",
-    "tianshou>=0.4.11",
-    "torch>=1.12.1",
-    "pytest>=7.1.2"
+    "tianshou==0.4.11",
+    "torch==1.12.1",
+    "pytest==7.1.2",
+    "pygame==2.1.2",
+    "ray==2.2.0"
+
 ]
 
 [project.urls]

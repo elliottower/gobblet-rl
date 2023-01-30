@@ -40,12 +40,25 @@ class Board:
     def setup(self):
         self.calculate_winners()
 
-    def get_action(self, pos, piece):
+    def get_action_from_pos_piece(self, pos, piece):
         if pos in range(9) and piece in range(1,7):
             return 9 * (piece - 1) + pos
         else:
             return -1
 
+    # Return an action if an agent can place of the specified size in the specified location
+    # Checks both possible pieces of that size, and returns -1 if neither can be placed (i.e., they are both covered)
+    def get_action(self, pos, piece_size, agent_index):
+        piece1 = piece_size * 2 - 1
+        piece2 = piece_size * 2
+        action1 = pos + 9 * (piece1 - 1)
+        action2 = pos + 9 * (piece2 - 1)
+        if self.is_legal(action1, agent_index):
+            return action1
+        elif self.is_legal(action2, agent_index):
+            return action2
+        else:
+            return -1
 
     # To determine the position from an action, we take the number modulo 9, resulting in a number 0-8
     def get_pos_from_action(self, action):
@@ -67,19 +80,19 @@ class Board:
         return pos + 9 * (piece_size - 1) # [0-26]
 
 
-    # Return true if an action is legal, false otherwise
-    def is_legal(self, action):
+    # Return true if an action is legal, false otherwise.
+    def is_legal(self, action, agent_index=0):
         pos = self.get_pos_from_action(action) # [0-8]
         piece = self.get_piece_from_action(action) # [1-6]
         piece_size = self.get_piece_size_from_action(action) # [1-3]
+        agent_multiplier = 1 if agent_index == 0 else -1
 
         board = self.squares.reshape(3, 9)
-
         # Check if this piece has been placed (if the piece number occurs anywhere on the level of that piece size)
-        if any(board[piece_size-1] == piece):
-            current_loc = np.where(board[piece_size-1] == piece)[0] # Returns array of values where piece is placed
+        if any(board[piece_size-1] == piece * agent_multiplier):
+            current_loc = np.where(board[piece_size-1] == piece * agent_multiplier)[0] # Returns array of values where piece is placed
             if len(current_loc) > 1:
-                print("--ERROR-- PIECE HAS BEEN USED TWICE")
+                raise Exception("Error: piece has been used twice")
             else:
                 current_loc = current_loc[0] # Current location [0-27]
             # If this piece is currently covered, moving it is not a legal action
@@ -100,14 +113,14 @@ class Board:
                 return False
 
     # Update the board with an agent's move
-    def play_turn(self, agent, action):
+    def play_turn(self, agent_index, action):
         piece = self.get_piece_from_action(action)
-        if agent == 1:
+        if agent_index == 1:
             piece = piece * -1
         index = self.get_index_from_action(action)
 
         # First: check if a move is legal or not
-        if not self.is_legal(action):
+        if not self.is_legal(action, agent_index):
             print("ILLEGAL MOVE: ", action)
             return
         # If piece has already been placed, clear previous location

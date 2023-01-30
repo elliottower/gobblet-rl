@@ -29,7 +29,7 @@ from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
 from torch.utils.tensorboard import SummaryWriter
 
-from gobblet import gobblet_v0
+from gobblet import gobblet_v1
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -156,7 +156,7 @@ def get_agents(
 
 
 def get_env(render_mode=None, debug=False):
-    return PettingZooEnv(gobblet_v0.env(render_mode=render_mode, debug=debug))
+    return PettingZooEnv(gobblet_v1.env(render_mode=render_mode, debug=debug))
 
 
 def train_agent(

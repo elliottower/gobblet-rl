@@ -1,7 +1,7 @@
 import os
 import pygame
 
-
+# Modified from pettingzoo.classic.connect_four
 def get_image(path):
 
     cwd = os.path.dirname(__file__)

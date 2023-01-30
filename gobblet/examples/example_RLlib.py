@@ -11,7 +11,7 @@ from ray.rllib.utils.framework import try_import_torch
 from ray.tune.logger import pretty_print
 from ray.tune.registry import register_env
 
-from gobblet import gobblet_v0
+from gobblet import gobblet_v1
 from gobblet.models.action_mask_model import TorchActionMaskModel
 from gobblet.utils import get_project_root
 
@@ -23,7 +23,7 @@ def prepare_train() -> Tuple[ppo.PPOTrainer, PettingZooEnv]:
 
     # get the Pettingzoo env
     def env_creator():
-        env = env = gobblet_v0.env(render_mode=None, debug=False)
+        env = env = gobblet_v1.env(render_mode=None, debug=False)
         return env
 
     register_env(env_name, lambda config: PettingZooEnv(env_creator()))

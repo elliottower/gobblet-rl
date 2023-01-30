@@ -9,7 +9,7 @@
 
 This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
 
-| Import             | `from pettingzoo.classic.chess_v5` |
+| Import             | `from gobblet import gobblet_v1`   |
 |--------------------|------------------------------------|
 | Actions            | Discrete                           |
 | Parallel API       | Yes                                |
@@ -112,7 +112,7 @@ def env(render_mode=None, debug=None):
     env = raw_env(render_mode=render_mode, debug=debug)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
-    env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
+    # env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
     env = wrappers.AssertOutOfBoundsWrapper(env)
     env = wrappers.OrderEnforcingWrapper(env)
     return env
@@ -121,8 +121,8 @@ parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
     metadata = {
-        "render_modes": ["text", "text_full", "human"],
-        "name": "gobblet_v0",
+        "render_modes": ["human", "rgb_array", "text", "text_full"],
+        "name": "gobblet_v1",
         "is_parallelizable": True,
         "render_fps": 1,
     }
@@ -175,7 +175,7 @@ class raw_env(AECEnv):
         if self.agents.index(agent) == 1:
             board = board * -1 # Swap the signs on the board for the two different agents
 
-        # Chess way of representing observations: specific channel for each color piece (e.g., two for each white small piece)
+        # Represent observations in the same way as pettingzoo.chess: specific channel for each color piece (e.g., two for each white small piece)
         layers = []
         for i in range(1, 7):
             layers.append(board[(i - 1) // 2] == i) # 3x3 array with an entry of 1 for squares with each white piece (1, ..., 6)
@@ -183,11 +183,6 @@ class raw_env(AECEnv):
         for i in range(1, 7):
             layers.append(board[(i - 1) // 2] == -i)  # 3x3 array with an entry of 1 for squares with each black piece (-1, ..., -6)
         observation = np.stack(layers, axis=2).astype(np.int8)
-        # Tic-tac-toe way of representing observations: just show the raw board for current player and opponent player
-        # cur_p_board = np.greater(board, 0)
-        # opp_p_board = np.less(board, 0)
-        # observation = np.stack([cur_p_board, opp_p_board], axis=3).astype(np.int8)
-        #
         legal_moves = self._legal_moves() if agent == self.agent_selection else []
 
         action_mask = np.zeros(54, "int8")
@@ -252,7 +247,7 @@ class raw_env(AECEnv):
         self._accumulate_rewards()
         self.turn += 1
         self.action = action
-        if self.render_mode == "human" or "human_full":
+        if self.render_mode == "human" or "text" or "human_full":
             self.render()
 
 
@@ -349,10 +344,10 @@ class raw_env(AECEnv):
             print(top + "  " + top + "  " + top)
             print()
 
-        else:
+        elif self.render_mode == "human":
             # Adapted from PettingZoo connect_four.py
-            screen_width = 1287
-            screen_height = 1287
+            screen_width = 1000 #1287
+            screen_height = 1000 #1287
             if self.render_mode == "human":
                 if self.screen is None:
                     pygame.init()
@@ -361,29 +356,33 @@ class raw_env(AECEnv):
             elif self.screen is None:
                 self.screen = pygame.Surface((screen_width, screen_height))
 
-            # Load and scale all of the necessary images
-            tile_size = (screen_width * (91 / 99)) / 7
-
+            # Load and scale all the necessary images
+            # tile_size = screen_width * (11 / 53)
+            # tile_size = (screen_width * (45 / 53)) / 3
+            tile_size = (screen_width * ((47 - 7) / 47)) / 3
+            scale_large = 9 / 13
+            scale_med = 6 / 13
+            scale_small = 4 / 13
             red = {}
-            red[3] = load_chip(tile_size, "GobbletLargeRed.png", 9/13)
-            red[2] = load_chip(tile_size, "GobbletMedRed.png", 9/13)
-            red[1] = load_chip(tile_size, "GobbletSmallRed.png", 9/13)
+            red[3] = load_chip(tile_size, "GobbletLargeRed.png", scale_large)
+            red[2] = load_chip(tile_size, "GobbletMedRed.png", scale_med)
+            red[1] = load_chip(tile_size, "GobbletSmallRed.png", scale_small)
 
             yellow = {}
-            yellow[3] = load_chip(tile_size, "GobbletLargeYellow.png", 9 / 13)
-            yellow[2] = load_chip(tile_size, "GobbletMedYellow.png", 9 / 13)
-            yellow[2] = load_chip(tile_size, "GobbletSmallYellow.png", 9 / 13)
+            yellow[3] = load_chip(tile_size, "GobbletLargeYellow.png", scale_large)
+            yellow[2] = load_chip(tile_size, "GobbletMedYellow.png", scale_med)
+            yellow[1] = load_chip(tile_size, "GobbletSmallYellow.png", scale_small)
 
             self.preview = {}
             self.preview["player_1"] = {}
-            self.preview["player_1"][3] = load_chip_preview(tile_size, "GobbletLargeRedPreview.png", 9 / 13)
-            self.preview["player_1"][2] = load_chip_preview(tile_size, "GobbletMedRedPreview.png", 9 / 13)
-            self.preview["player_1"][1] = load_chip_preview(tile_size, "GobbletSmallRedPreview.png", 9 / 13)
+            self.preview["player_1"][3] = load_chip_preview(tile_size, "GobbletLargeRedPreview.png", scale_large)
+            self.preview["player_1"][2] = load_chip_preview(tile_size, "GobbletMedRedPreview.png", scale_med)
+            self.preview["player_1"][1] = load_chip_preview(tile_size, "GobbletSmallRedPreview.png", scale_small)
 
             self.preview["player_2"] = {}
-            self.preview["player_2"][3] = load_chip_preview(tile_size, "GobbletLargeYellowPreview.png", 9 / 13)
-            self.preview["player_2"][2] = load_chip_preview(tile_size, "GobbletMedYellowPreview.png", 9 / 13)
-            self.preview["player_2"][1] = load_chip_preview(tile_size, "GobbletSmallYellowPreview.png", 9 / 13)
+            self.preview["player_2"][3] = load_chip_preview(tile_size, "GobbletLargeYellowPreview.png", scale_large)
+            self.preview["player_2"][2] = load_chip_preview(tile_size, "GobbletMedYellowPreview.png", scale_med)
+            self.preview["player_2"][1] = load_chip_preview(tile_size, "GobbletSmallYellowPreview.png", scale_small)
 
             preview_chips = {self.agents[0]: self.preview["player_1"], self.agents[1]: self.preview["player_1"]}
 
@@ -394,56 +393,64 @@ class raw_env(AECEnv):
 
             self.screen.blit(board_img, (0, 0))
 
-            # Blit the necessary chips and their positions
+            offset = (screen_width * ((9+4) / 47))
+            offset_side = (screen_width * (6 / 47)) - 1 # Slight adjustment to make everything align
+            offset_centering = offset * 1/3 + 5
+
+            # Blit the chips and their positions
             for i in range(9):
                 for j in range(1, 4):
-                    if self.board.squares[i + 9 * (j - 1)] == 1 * j:
+                    if self.board.squares[i + 9 * (j - 1)] == 2 * j - 1 or \
+                        self.board.squares[i + 9 * (j - 1)] == 2 * j: # small pieces (1,2), medium pieces (3,4), large pieces (5,6)
                         self.screen.blit(
                             red[j],
-                            (
-                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
-                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
-                            ),
+                            red[j].get_rect(center =
+                                                (int(i / 3) * (offset) + offset_side + offset_centering,
+                                                     (i % 3) * (offset) + offset_side + offset_centering
+                                                 )
+                                            )
                         )
-                    if self.board.squares[i + 9 * (j - 1)] == -1 * j:
+                    if self.board.squares[i + 9 * (j - 1)] == -1 * (2  * j - 1) or\
+                        self.board.squares[i + 9 * (j - 1)] == -1 * (2 * j):
                         self.screen.blit(
-                            red[j],
-                            (
-                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
-                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
-                            ),
+                            yellow[j],
+                            yellow[j].get_rect(center =
+                                                (int(i / 3) * (offset) + offset_side + offset_centering,
+                                                     (i % 3) * (offset) + offset_side + offset_centering
+                                                 )
+                                            )
                         )
 
             # Blit the preview chips and their positions
             for i in range(9):
                 for j in range(1, 4):
-                    if self.board.squares_preview[i + 9 * (j - 1)] == 1 * j:
+                    if self.board.squares_preview[i + 9 * (j - 1)] == 1:
                         self.screen.blit(
-                            red[j],
-                            (
-                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
-                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
-                            ),
+                            self.preview["player_1"][j],
+                            self.preview["player_1"][j].get_rect(center =
+                                                (int(i / 3) * (offset) + offset_side + offset_centering,
+                                                     (i % 3) * (offset) + offset_side + offset_centering
+                                                 )
+                                            )
                         )
-                    if self.board.squares_preview[i + 9 * (j - 1)] == -1 * j:
+                    if self.board.squares_preview[i + 9 * (j - 1)] == -1:
                         self.screen.blit(
-                            red[j],
-                            (
-                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
-                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
-                            ),
+                            self.preview["player_2"][j],
+                            self.preview["player_2"][j].get_rect(center =
+                                                (int(i / 3) * (offset) + offset_side + offset_centering,
+                                                     (i % 3) * (offset) + offset_side + offset_centering
+                                                 )
+                                            )
                         )
 
-            if self.render_mode == "human":
-                pygame.display.update()
-
+            pygame.display.update()
+        elif self.render_mode == "rgb_array":
             observation = np.array(pygame.surfarray.pixels3d(self.screen))
-
-            return (
-                np.transpose(observation, axes=(1, 0, 2))
-                if self.render_mode == "rgb_array"
-                else None
-            )
+        return (
+            np.transpose(observation, axes=(1, 0, 2))
+            if self.render_mode == "rgb_array"
+            else None
+        )
 
     def close(self):
         if self.screen is not None:

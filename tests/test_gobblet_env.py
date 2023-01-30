@@ -2,12 +2,12 @@ import pettingzoo
 import pettingzoo.test
 import pytest
 import numpy as np
-from gobblet import gobblet_v0
+from gobblet import gobblet_v1
 
 # Note: raw_env is required in order to test the board state, as env() only allows observations
 @pytest.fixture(scope="function")
 def env():
-    env = gobblet_v0.raw_env()
+    env = gobblet_v1.raw_env()
     env.reset()
     yield env
     env.close()
@@ -32,16 +32,16 @@ def test_api(env):
 
 
 def test_parallel_api(env):
-    env = gobblet_v0.parallel_env()
+    env = gobblet_v1.parallel_env()
     pettingzoo.test.parallel_api_test(env, num_cycles=1000)
 
 
 def test_seed(env):
-    pettingzoo.test.seed_test(gobblet_v0.env)
+    pettingzoo.test.seed_test(gobblet_v1.env)
 
 
 def test_seed_raw(env):
-    pettingzoo.test.seed_test(gobblet_v0.raw_env)
+    pettingzoo.test.seed_test(gobblet_v1.raw_env)
 
 
 @pytest.mark.skip(
@@ -54,7 +54,7 @@ def test_max_cycles(env):
 # Note: this test sometimes fails due to empty possible actions list, re-run if it fails
 def test_performance_benchmark(env):
     "Run PettingZoo performance benchmark on the env"
-    env = gobblet_v0.env()
+    env = gobblet_v1.env()
     pettingzoo.test.performance_benchmark(env)
 
 
@@ -64,7 +64,7 @@ def test_save_obs(env):
 
 def test_render(env):
     "Verify that render() executes without error for human-readable output"
-    pettingzoo.test.render_test(gobblet_v0.raw_env)
+    pettingzoo.test.render_test(gobblet_v1.raw_env)
 
 
 def test_render_human(env):

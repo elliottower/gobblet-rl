@@ -31,9 +31,9 @@ In a Python shell, run the following:
 
 ```python
 import pettingzoo
-from gobblet import gobblet_v0
+from gobblet import gobblet_v1
 
-env = gobblet_v0.env()
+env = gobblet_v1.env()
 ```
 
 ### Train a DQL agent with Tianshou
