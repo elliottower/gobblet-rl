@@ -32,6 +32,7 @@ class Board:
         # player 0 -- 1
         # player 1 -- -1 # Default: 2
         self.squares = np.zeros(27)
+        self.squares_preview = np.zeros(27)
 
         # precommute possible winning combinations
         self.calculate_winners()

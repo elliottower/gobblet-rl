@@ -98,11 +98,14 @@ If the game ends in a draw, both players will receive a reward of 0.
 import gymnasium
 import numpy as np
 from gymnasium import spaces
+import pygame
+import os
 
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 from .board import Board
+from .utils import get_image, load_chip, load_chip_preview
 
 
 def env(render_mode=None, debug=None):
@@ -118,7 +121,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
     metadata = {
-        "render_modes": ["human", "human_full"],
+        "render_modes": ["text", "text_full", "human"],
         "name": "gobblet_v0",
         "is_parallelizable": True,
         "render_fps": 1,
@@ -127,6 +130,7 @@ class raw_env(AECEnv):
     def __init__(self, render_mode=None, debug=False):
         super().__init__()
         self.board = Board()
+        self.board_size = 3 # Will need to make a separate file for 4x4
 
         self.agents = ["player_1", "player_2"]
         self.possible_agents = self.agents[:]
@@ -154,6 +158,7 @@ class raw_env(AECEnv):
 
         self.render_mode = render_mode
         self.debug = debug
+        self.screen = None
 
     # Key
     # ----
@@ -221,9 +226,6 @@ class raw_env(AECEnv):
         # play turn
         self.board.play_turn(self.agents.index(self.agent_selection), action)
 
-        # update infos
-        # list of valid actions (indexes in board)
-        # next_agent = self.agents[(self.agents.index(self.agent_selection) + 1) % len(self.agents)]
         next_agent = self._agent_selector.next()
 
         if self.board.check_game_over():
@@ -293,14 +295,14 @@ class raw_env(AECEnv):
                 return "+{}".format(int((input + 1) // 2))
             else:
                 return "{}".format(int((input) // 2))
-        pos = self.action % 9
-        piece = (self.action // 9) + 1
-        if self.render_mode == "human":
-            piece = (piece + 1) // 2
-        print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
+
         if self.debug:
             self.board.print_pieces()
-        if self.render_mode == "human" or self.debug:
+        if self.render_mode == "text" or self.debug:
+            pos = self.action % 9
+            piece = (self.action // 9) + 1
+            piece = (piece + 1) // 2
+            print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
             board = list(map(getSymbol, self.board.get_flatboard()))
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
             print(f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  ")
@@ -315,7 +317,10 @@ class raw_env(AECEnv):
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
             print()
 
-        if self.render_mode == "human_full":
+        elif self.render_mode == "text_full":
+            pos = self.action % 9
+            piece = (self.action // 9) + 1
+            print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
             board = list(map(getSymbolFull, self.board.squares))
             print(" " * 9 + "SMALL" + " " * 9 + "  " +
                   " " * 10 + "MED" + " " * 10 + "  " +
@@ -344,5 +349,105 @@ class raw_env(AECEnv):
             print(top + "  " + top + "  " + top)
             print()
 
+        else:
+            # Adapted from PettingZoo connect_four.py
+            screen_width = 1287
+            screen_height = 1287
+            if self.render_mode == "human":
+                if self.screen is None:
+                    pygame.init()
+                    self.screen = pygame.display.set_mode((screen_width, screen_height))
+                pygame.event.get()
+            elif self.screen is None:
+                self.screen = pygame.Surface((screen_width, screen_height))
+
+            # Load and scale all of the necessary images
+            tile_size = (screen_width * (91 / 99)) / 7
+
+            red = {}
+            red[3] = load_chip(tile_size, "GobbletLargeRed.png", 9/13)
+            red[2] = load_chip(tile_size, "GobbletMedRed.png", 9/13)
+            red[1] = load_chip(tile_size, "GobbletSmallRed.png", 9/13)
+
+            yellow = {}
+            yellow[3] = load_chip(tile_size, "GobbletLargeYellow.png", 9 / 13)
+            yellow[2] = load_chip(tile_size, "GobbletMedYellow.png", 9 / 13)
+            yellow[2] = load_chip(tile_size, "GobbletSmallYellow.png", 9 / 13)
+
+            self.preview = {}
+            self.preview["player_1"] = {}
+            self.preview["player_1"][3] = load_chip_preview(tile_size, "GobbletLargeRedPreview.png", 9 / 13)
+            self.preview["player_1"][2] = load_chip_preview(tile_size, "GobbletMedRedPreview.png", 9 / 13)
+            self.preview["player_1"][1] = load_chip_preview(tile_size, "GobbletSmallRedPreview.png", 9 / 13)
+
+            self.preview["player_2"] = {}
+            self.preview["player_2"][3] = load_chip_preview(tile_size, "GobbletLargeYellowPreview.png", 9 / 13)
+            self.preview["player_2"][2] = load_chip_preview(tile_size, "GobbletMedYellowPreview.png", 9 / 13)
+            self.preview["player_2"][1] = load_chip_preview(tile_size, "GobbletSmallYellowPreview.png", 9 / 13)
+
+            preview_chips = {self.agents[0]: self.preview["player_1"], self.agents[1]: self.preview["player_1"]}
+
+            board_img = get_image(os.path.join("img", "GobbletBoard3x3.png"))
+            board_img = pygame.transform.scale(
+                board_img, ((int(screen_width)), int(screen_height))
+            )
+
+            self.screen.blit(board_img, (0, 0))
+
+            # Blit the necessary chips and their positions
+            for i in range(9):
+                for j in range(1, 4):
+                    if self.board.squares[i + 9 * (j - 1)] == 1 * j:
+                        self.screen.blit(
+                            red[j],
+                            (
+                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
+                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
+                            ),
+                        )
+                    if self.board.squares[i + 9 * (j - 1)] == -1 * j:
+                        self.screen.blit(
+                            red[j],
+                            (
+                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
+                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
+                            ),
+                        )
+
+            # Blit the preview chips and their positions
+            for i in range(9):
+                for j in range(1, 4):
+                    if self.board.squares_preview[i + 9 * (j - 1)] == 1 * j:
+                        self.screen.blit(
+                            red[j],
+                            (
+                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
+                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
+                            ),
+                        )
+                    if self.board.squares_preview[i + 9 * (j - 1)] == -1 * j:
+                        self.screen.blit(
+                            red[j],
+                            (
+                                (i % 3) * (tile_size) + (tile_size * (6 / 13)),
+                                int(i / 3) * (tile_size) + (tile_size * (6 / 13)),
+                            ),
+                        )
+
+            if self.render_mode == "human":
+                pygame.display.update()
+
+            observation = np.array(pygame.surfarray.pixels3d(self.screen))
+
+            return (
+                np.transpose(observation, axes=(1, 0, 2))
+                if self.render_mode == "rgb_array"
+                else None
+            )
+
     def close(self):
-        pass
+        if self.screen is not None:
+            import pygame
+
+            pygame.quit()
+            self.screen = None
