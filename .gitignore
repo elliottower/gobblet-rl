@@ -10,5 +10,11 @@ gobblet/.DS_Store
 /gobblet/__pycache__/
 /gobblet/examples/example_cleanRL.py
 /gobblet/examples/example_cleanRL_batch.py
+/gobblet/examples/example_RLlib.py
+/gobblet/examples/example_RLlib_dev.py
+/gobblet/examples/example_RLlib_from_multi_agent_cartpole.py
+/gobblet/examples/example_rllib_from_rps.py
+/gobblet/examples/RLlib_rock_paper_scissors.py
 /tests/.pytest_cache/
 /gobblet/models/
+/__pycache__/
