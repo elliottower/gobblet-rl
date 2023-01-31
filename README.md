@@ -72,7 +72,7 @@ The flag ``--cpu-only`` will launch a game with two CPU agents, and takes no int
 
 ``--render_mode="human" `` will render the game board visually using pygame. Player 1 plays red and goes first, while player 2 plays yellow. 
 
-<img src="https://raw.githubusercontent.com/elliottower/gobblet-rl/main/gobblet_pygame.png" width=50% height=50%>
+<img src="https://raw.githubusercontent.com/elliottower/gobblet-rl/main/gobblet_pygame.png" width=30% height=30%>
 
 When playing interactively, possible moves can be previewed by hovering the mouse over each square. To move a piece which is already placed, simply click on it.
 
