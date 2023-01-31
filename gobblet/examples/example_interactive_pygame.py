@@ -107,9 +107,7 @@ if __name__ == "__main__":
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_SPACE:
                             flag = True
-                            # if time.time() - last_keystroke > 0.5:  # Only cycle every 0.5 seconds
                             piece_cycle += 1
-                            last_keystroke = time.time()
                         else:
                             if event.key == pygame.K_1: # User inputs for pieces of size 1 (indices 1 and 2)
                                 piece_cycle = 0
@@ -175,7 +173,9 @@ if __name__ == "__main__":
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         # Pick up a piece (only able to if it has already been placed, and is not currently picked up)
                         if flatboard[pos] in placed_pieces_agent and not picked_up :
-                            if abs(flatboard[pos]) >= abs(piece):
+
+                            piece_size_on_board = (abs(flatboard[pos]) + 1) // 2
+                            if piece_size >= piece_size_selected:
                                 # Can only pick up a piece if there is a legal move to place it, other than where it was before
                                 if not all(observation["action_mask"][9 * (piece - 1): 9 * piece] == 0):
                                     picked_up = True
