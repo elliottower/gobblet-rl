@@ -3,12 +3,12 @@
 [![PyPI version](https://badge.fury.io/py/gobblet-rl.svg?branch=master)](https://badge.fury.io/py/gobblet-rl) 
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/elliottower/gobblet-rl/blob/main/LICENSE)
 
-Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game  using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) and [Pygame](https://github.com/pygame/pygame).
+Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) and [Pygame](https://github.com/pygame/pygame).
 
 <p align="center">
   <img alt="Light" src="./gobblet.jpg" width="45%">
 &nbsp; &nbsp; &nbsp; &nbsp;
-  <img alt="Dark" src="./gobblet_pygame.png" width="45%">
+  <img alt="Dark" src="./gobblet_pygame.gif" width="45%">
 </p> 
  
 ## Installation

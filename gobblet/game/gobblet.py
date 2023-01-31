@@ -108,8 +108,8 @@ from .board import Board
 from .utils import get_image, load_chip, load_chip_preview
 
 
-def env(render_mode=None, debug=None):
-    env = raw_env(render_mode=render_mode, debug=debug)
+def env(render_mode=None, args=None):
+    env = raw_env(render_mode=render_mode, args=args)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
     # env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
@@ -127,7 +127,7 @@ class raw_env(AECEnv):
         "render_fps": 1,
     }
 
-    def __init__(self, render_mode=None, debug=False):
+    def __init__(self, render_mode=None, args=None):
         super().__init__()
         self.board = Board()
         self.board_size = 3 # Will need to make a separate file for 4x4
@@ -157,7 +157,9 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.reset()
 
         self.render_mode = render_mode
-        self.debug = debug
+        self.debug = args.debug
+        self.screen_width = args.screen_width
+        self.screen_height = args.screen_width # Ensure dimensions are the same to prevent scaling issues
         self.screen = None
 
     # Key
@@ -217,7 +219,7 @@ class raw_env(AECEnv):
             print("piece: ", self.board.get_piece_from_action(action))
             print("piece_size: ", self.board.get_piece_size_from_action(action))
             print("pos: ", self.board.get_pos_from_action(action))
-            raise Exception()
+            print("--ERROR-- ILLEGAL MOVE")
         # play turn
         self.board.play_turn(self.agents.index(self.agent_selection), action)
 
@@ -345,21 +347,18 @@ class raw_env(AECEnv):
             print()
 
         elif self.render_mode == "human":
-            # Adapted from PettingZoo connect_four.py
-            screen_width = 1000 #1287
-            screen_height = 1000 #1287
+            # Adapted from PettingZoo connect_four.py (keep width equal to height or things will not scale properly)
             if self.render_mode == "human":
                 if self.screen is None:
                     pygame.init()
-                    self.screen = pygame.display.set_mode((screen_width, screen_height))
+                    self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
                 pygame.event.get()
             elif self.screen is None:
-                self.screen = pygame.Surface((screen_width, screen_height))
+                self.screen = pygame.Surface((self.screen_width, self.screen_height))
 
             # Load and scale all the necessary images
-            # tile_size = screen_width * (11 / 53)
-            # tile_size = (screen_width * (45 / 53)) / 3
-            tile_size = (screen_width * ((47 - 7) / 47)) / 3
+            # Settled on these numbers by trial & error (happens to make things fit nicely)
+            tile_size = (self.screen_width * ((47 - 7) / 47)) / 3
             scale_large = 9 / 13
             scale_med = 6 / 13
             scale_small = 4 / 13
@@ -388,14 +387,16 @@ class raw_env(AECEnv):
 
             board_img = get_image(os.path.join("img", "GobbletBoard3x3.png"))
             board_img = pygame.transform.scale(
-                board_img, ((int(screen_width)), int(screen_height))
+                board_img, ((int(self.screen_width)), int(self.screen_height))
             )
 
             self.screen.blit(board_img, (0, 0))
 
-            offset = (screen_width * ((9+4) / 47))
-            offset_side = (screen_width * (6 / 47)) - 1 # Slight adjustment to make everything align
-            offset_centering = offset * 1/3 + 5
+            offset = (self.screen_width * ((9+4) / 47)) # Piece is 9px wide, gap between pieces 4px, total width is 47px
+            offset_side = (self.screen_width * (6 / 47)) - 1 # Distance from the side of the board to the first piece is 6px
+            offset_centering = offset * 1/3 + \
+                               (5 * self.screen_width/1000 if self.screen_width > 500 else 8 * self.screen_width/1000)
+            # Extra 5px fixed alignment issues at 1000x1000, but ratio needs to be higher for lower res (trial & error)
 
             # Blit the chips and their positions
             for i in range(9):
