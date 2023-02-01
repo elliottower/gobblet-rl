@@ -106,6 +106,7 @@ from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 from .board import Board
 from .utils import get_image, load_chip, load_chip_preview
+from .manual_policy import ManualPolicy
 
 
 def env(render_mode=None, args=None):
@@ -124,7 +125,8 @@ class raw_env(AECEnv):
         "render_modes": ["human", "rgb_array", "text", "text_full"],
         "name": "gobblet_v1",
         "is_parallelizable": True,
-        "render_fps": 1,
+        "render_fps": 60,
+        "has_manual_policy": True,
     }
 
     def __init__(self, render_mode=None, args=None):
@@ -157,9 +159,9 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.reset()
 
         self.render_mode = render_mode
-        self.debug = args.debug
-        self.screen_width = args.screen_width
-        self.screen_height = args.screen_width # Ensure dimensions are the same to prevent scaling issues
+        self.debug = args.debug if hasattr(args, "debug") else False
+        self.screen_width = args.screen_width if hasattr(args, "screen_width") else 640
+        self.screen_height = self.screen_width
         self.screen = None
 
     # Key
@@ -215,12 +217,12 @@ class raw_env(AECEnv):
             return self._was_dead_step(action)
         # check if input action is a valid move (0 == empty spot)
         # assert self.board.is_legal(action), "played illegal move"
-        if not self.board.is_legal(action):
+        if not self.board.is_legal(action, self.agent_selection) and self.debug:
             print("piece: ", self.board.get_piece_from_action(action))
             print("piece_size: ", self.board.get_piece_size_from_action(action))
             print("pos: ", self.board.get_pos_from_action(action))
             print("--ERROR-- ILLEGAL MOVE")
-        # play turn
+
         self.board.play_turn(self.agents.index(self.agent_selection), action)
 
         next_agent = self._agent_selector.next()
@@ -249,7 +251,7 @@ class raw_env(AECEnv):
         self._accumulate_rewards()
         self.turn += 1
         self.action = action
-        if self.render_mode == "human" or "text" or "human_full":
+        if self.render_mode in ["human", "text", "text_full", "rgb_array"]:
             self.render()
 
 

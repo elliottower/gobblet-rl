@@ -13,7 +13,7 @@ from ray.tune.registry import register_env
 
 from gobblet import gobblet_v1
 from gobblet.models.action_mask_model import TorchActionMaskModel
-from gobblet.utils import get_project_root
+from gobblet.game.utils import get_project_root
 
 torch, nn = try_import_torch()
 

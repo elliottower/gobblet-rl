@@ -9,9 +9,11 @@ gobblet/.DS_Store
 /gobblet/models/
 /tests/.pytest_cache/
 /.pytest_cache/
-gobblet/examples/__pycache__/
+gobblet/examples/__pycache__/*
+gobblet/game/__PYCACHE__/*
 /__pycache__/
 /gobblet/examples/example_cleanRL.py
 /gobblet/examples/example_cleanRL_batch.py
 /tests/test.py
+*.gif
 

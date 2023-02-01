@@ -121,7 +121,6 @@ class Board:
 
         # First: check if a move is legal or not
         if not self.is_legal(action, agent_index):
-            print("ILLEGAL MOVE: ", action)
             return
         # If piece has already been placed, clear previous location
         if piece in self.squares:

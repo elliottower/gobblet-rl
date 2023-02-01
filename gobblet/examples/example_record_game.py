@@ -1,19 +1,18 @@
-from gobblet import gobblet_v1
-import argparse
+import pygame
+from gobblet.game.utils import GIFRecorder
 import numpy as np
-import time
-
+import argparse
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--render-mode", type=str, default="human", help="options: human, rgb_array, text, text_full"
+        "--seed", type=int, default=None, help="Set random seed manually (will only affect CPU agents)"
     )
     parser.add_argument(
-        "--seed", type=int, default=None, help="random seed for board and policy"
+        "--cpu-players", type=int, default=1, help="Number of CPU players (options: 1, 2)"
     )
     parser.add_argument(
-        "--debug", action="store_true", help="display extra debugging information"
+        "--player", type=int, default=0, help="Choose which player to play as: red = 0, yellow = 1"
     )
     parser.add_argument(
         "--screen-width", type=int, default=640, help="Width of pygame screen in pixels"
@@ -26,31 +25,46 @@ def get_args() -> argparse.Namespace:
     return parser.parse_known_args()[0]
 
 if __name__ == "__main__":
-    # train the agent and watch its performance in a match!
+    from gobblet import gobblet_v1
+
     args = get_args()
+
+    clock = pygame.time.Clock()
 
     if args.seed is not None:
         np.random.seed(args.seed)
 
-    env = gobblet_v1.env(render_mode=args.render_mode, args=args)
-
+    env = gobblet_v1.env(render_mode="human", args=args)
     env.reset()
+
+    recorder = GIFRecorder(width=1000, height=1000)
 
     env.render()  # need to render the environment before pygame can take user input
 
+    # Record the first frame (empty board)
+    recorder.capture_frame(env.unwrapped.screen)
+
+    manual_policy = gobblet_v1.ManualPolicy(env, recorder=recorder)
+
     for agent in env.agent_iter():
+        clock.tick(env.metadata["render_fps"])
 
         observation, reward, termination, truncation, info = env.last()
 
         if termination or truncation:
             print(f"Agent: ({agent}), Reward: {reward}, info: {info}")
-            env.step(None)
 
+            recorder.end_recording()
+
+            env.step(None)
+            continue
+
+        if agent == manual_policy.agent and args.cpu_players < 2:
+                action = manual_policy(observation, agent)
         else:
             action_mask = observation['action_mask']
             action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
 
-            if args.render_mode == "human":
-                time.sleep(5) # Wait .5 seconds between moves so the user can follow the sequence of moves
+        env.step(action)
 
-            env.step(action)
+        env.render()

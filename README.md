@@ -34,11 +34,34 @@ pip install -e .
 In a Python shell, run the following:
 
 ```python
-import pettingzoo
 from gobblet import gobblet_v1
 
 env = gobblet_v1.env()
 ```
+
+
+### Play an interactive game
+
+In the terminal, run the following:
+```
+python gobblet/examples/example_user_input.py"
+```
+To select a piece size, press a number key `1`, `2`, or `3`, or press `space` to cycle through pieces. Placing a piece is done by clicking on a square on the board. A preview will appear showing legal moves with the selected piece size. Clicking on an already placed piece will pick it up and prompt you to place it in a new location (re-placing in the same location is an illegal move).
+### Screen recording of a game
+
+In the terminal, run the following:
+```
+python gobblet/examples/example_record_game.py"
+```
+This will save a screen recording of a game to `gobblet/examples/game.gif` 
+
+### Display a game between two basic CPU agents
+
+In the terminal, run the following:
+```
+python gobblet/examples/example_basic.py"
+```
+This will launch a game with two agents choosing random actions (other agent types will be added in the future)
 
 ### Train a DQL agent with Tianshou
 
@@ -47,28 +70,28 @@ In the terminal, run the following:
 python gobblet/example_tianshou.py
 ```
 
-This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and then render the trained agent playing against a random agent in an example match. 
+This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and then render the trained agent playing against a random agent in an example match.
 
-
-### Play an interactive game againt an agent
-
-In the terminal, run the following:
-```
-python gobblet/example_interactive_pygame.py --render_mode="human" --agent_type="random_permissible"
-```
 
 ### Command Line Arguments
 
+
 #### Game Modes
 
-The default game mode is human vs CPU, with the human playing as red and CPU as yellow. The ``--player`` argument allows you to play as yellow, with the CPU moving first.
+`example_user_input.py` and `example_record_game.py` take the following arguments:
 
-The flag ``--no-cpu`` will launch a game with no CPU agents, taking interactive input for both agents. 
+The default game mode is human vs CPU, with the human playing as red and CPU as yellow. 
 
-The flag ``--cpu-only`` will launch a game with two CPU agents, and takes no interactive input.
+ ``--player 1`` sets the human player as yellow, with the CPU moving first as red.
+
+``--cpu-players 0`` will launch a game with no CPU agents, taking interactive input for both agents. 
+
+``--cpu-player 2`` will launch a game with two CPU agents, and takes no interactive input.
 
 
-#### Render Modes
+#### Display Modes
+
+`example_basic.py` takes the following arguments to change display mode:
 
 ``--render_mode="human" `` will render the game board visually using pygame. Player 1 plays red and goes first, while player 2 plays yellow. 
 
