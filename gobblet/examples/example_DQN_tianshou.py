@@ -30,6 +30,7 @@ from tianshou.utils.net.common import Net
 from torch.utils.tensorboard import SummaryWriter
 
 from gobblet import gobblet_v1
+from gobblet.game.collector_manual_policy import ManualPolicyCollector
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -155,8 +156,8 @@ def get_agents(
     return policy, optim, env.agents
 
 
-def get_env(render_mode=None, debug=False):
-    return PettingZooEnv(gobblet_v1.env(render_mode=render_mode, debug=debug))
+def get_env(render_mode=None, args=None):
+    return PettingZooEnv(gobblet_v1.env(render_mode=render_mode, args=args))
 
 
 def train_agent(
@@ -256,7 +257,7 @@ def watch(
     agent_learn: Optional[BasePolicy] = None,
     agent_opponent: Optional[BasePolicy] = None,
 ) -> None:
-    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, debug=args.debug)])
+    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, args=args)])
     policy, optim, agents = get_agents(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
@@ -270,7 +271,10 @@ def watch(
     rews, lens = result["rews"], result["lens"]
     print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
 
+# TODO: Look more into Tianshou and see if self play is possible
+# For watching I think it could just be the same policy for both agents, but for training I think self play would be different
 def watch_selfplay(args, agent):
+    raise NotImplementedError()
     env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, debug=args.debug)])
     agent.set_eps(args.eps_test)
     policy = MultiAgentPolicyManager([agent, deepcopy(agent)], env) # fixed here
@@ -280,12 +284,6 @@ def watch_selfplay(args, agent):
     rews, lens = result["rews"], result["lens"]
     print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()}")
 
-if __name__ == "__main__":
-    # train the agent and watch its performance in a match!
-    args = get_args()
-    result, agent = train_agent(args)
-    watch(args, agent)
-    # play(args, agent)
 
 # Allows the user to input moves and play vs the learned agent
 def play(
@@ -293,13 +291,41 @@ def play(
         agent_learn: Optional[BasePolicy] = None,
         agent_opponent: Optional[BasePolicy] = None,
 ) -> None:
-    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode)])
+    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, args=args)])
+    # env = get_env(render_mode=args.render_mode, args=args) # Throws error because collector looks for length, could just override though since I'm using my own collector
     policy, optim, agents = get_agents(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
     policy.eval()
     policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
-    collector = Collector(policy, env, exploration_noise=True)
-    result = collector.collect(n_episode=1, render=args.render)
+
+    collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
+
+    pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
+    manual_policy = gobblet_v1.ManualPolicy(pettingzoo_env) # Gobblet keyboard input requires access to raw_env (uses functions from board)
+
+    # Get the first move from the CPU player
+    result = collector.collect(n_step=1, render=args.render)
+
+    while not (collector.data.terminated or collector.data.truncated):
+        agent_id = collector.data.obs.agent_id
+        if agent_id == pettingzoo_env.agents[1]:
+            # action_mask = collector.data.obs.mask[0]
+            # action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
+            observation = {"observation": collector.data.obs.obs,
+                            "action_mask": collector.data.obs.mask} # PettingZoo expects a dict with this format
+            action = manual_policy(observation, agent_id)
+
+            result = collector.collect_result(action=action.reshape(1), render=args.render)
+        else:
+            result = collector.collect(n_step=1, render=args.render)
+
     rews, lens = result["rews"], result["lens"]
     print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
+
+if __name__ == "__main__":
+    # train the agent and watch its performance in a match!
+    args = get_args()
+    result, agent = train_agent(args)
+    # watch(args, agent)
+    play(args, agent)
