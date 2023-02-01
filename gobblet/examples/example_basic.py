@@ -7,8 +7,10 @@ import time
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--render-mode", type=str, default="human", help="options: human, rgb_array, text, text_full"
+        "--render_mode", type=str, default="human", choices=["human", "rgb_array", "text", "text_full"],
+                        help="Choose the rendering mode for the game."
     )
+
     parser.add_argument(
         "--seed", type=int, default=None, help="random seed for board and policy"
     )

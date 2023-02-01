@@ -13,6 +13,8 @@ class ManualPolicy:
         self.agent = self.env.agents[self.agent_id]
         self.recorder = recorder
 
+        env.render()  # need to render the environment before pygame can take user input
+
     def __call__(self, observation, agent):
         recorder = self.recorder
         env = self.env

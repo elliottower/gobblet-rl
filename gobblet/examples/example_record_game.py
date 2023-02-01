@@ -9,10 +9,10 @@ def get_parser() -> argparse.ArgumentParser:
         "--seed", type=int, default=None, help="Set random seed manually (will only affect CPU agents)"
     )
     parser.add_argument(
-        "--cpu-players", type=int, default=1, help="Number of CPU players (options: 1, 2)"
+        "--cpu-players", type=int, default=1, choices=[0, 1, 2], help="Number of CPU players (options: 0, 1, 2)"
     )
     parser.add_argument(
-        "--player", type=int, default=0, help="Choose which player to play as: red = 0, yellow = 1"
+        "--player", type=int, default=0, choices=[0,1], help="Choose which player to play as: red = 0, yellow = 1"
     )
     parser.add_argument(
         "--screen-width", type=int, default=640, help="Width of pygame screen in pixels"

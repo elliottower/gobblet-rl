@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gobblet-rl"
-version = "1.2.1"
+version = "1.2.2"
 authors = [
   { name="Elliot Tower", email="elliot@elliottower.com" },
 ]

@@ -5,6 +5,8 @@
 
 Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) and [Pygame](https://github.com/pygame/pygame).
 
+Allows for users to play in the same environment, and even play against RL agents trained with [Tianshou](https://github.com/thu-ml/tianshou).
+
 <p align="center">
   <img alt="Light" src="./gobblet.jpg" width="45%">
 &nbsp; &nbsp; &nbsp; &nbsp;
@@ -39,6 +41,16 @@ from gobblet import gobblet_v1
 env = gobblet_v1.env()
 ```
 
+### Play against a DQL agent trained with Tianshou
+
+In the terminal, run the following:
+```
+python gobblet/example_DQN_tianshou.py --epoch 50 --player 1 --cpu-players 2
+```
+
+This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and launch an interactive game against the pre-trained agent. 
+
+Use the argument ``--cpu-player`` to determine the number of CPU agents (1 or 2)  and ``--player`` to choose which agent goes first (human first: 0, CPU first: 1)
 
 ### Play an interactive game
 
@@ -47,30 +59,23 @@ In the terminal, run the following:
 python gobblet/examples/example_user_input.py"
 ```
 To select a piece size, press a number key `1`, `2`, or `3`, or press `space` to cycle through pieces. Placing a piece is done by clicking on a square on the board. A preview will appear showing legal moves with the selected piece size. Clicking on an already placed piece will pick it up and prompt you to place it in a new location (re-placing in the same location is an illegal move).
-### Screen recording of a game
+
+### Create screen recording of a game
 
 In the terminal, run the following:
 ```
 python gobblet/examples/example_record_game.py"
 ```
-This will save a screen recording of a game to `gobblet/examples/game.gif` 
+This will save a screen recording of a game to `gobblet/examples/game.gif`
 
-### Display a game between two basic CPU agents
+
+### Watch a game between two basic CPU agents
 
 In the terminal, run the following:
 ```
 python gobblet/examples/example_basic.py"
 ```
-This will launch a game with two agents choosing random actions (other agent types will be added in the future)
-
-### Train a DQL agent with Tianshou
-
-In the terminal, run the following:
-```
-python gobblet/example_tianshou.py
-```
-
-This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and then render the trained agent playing against a random agent in an example match.
+This will launch a game with two basic agents choosing random actions. This file can be used as a starting point for prototyping future methods.
 
 
 ### Command Line Arguments
@@ -78,15 +83,18 @@ This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.
 
 #### Game Modes
 
-`example_user_input.py` and `example_record_game.py` take the following arguments:
+All scripts besides`example_basic.py` (no support for interactive play) take the following arguments:
 
 The default game mode is human vs CPU, with the human playing as red and CPU as yellow. 
 
  ``--player 1`` sets the human player as yellow, with the CPU moving first as red.
 
+``--cpu-players 1`` will launch a game with one CPU agent and one human agent. (default) 
+
 ``--cpu-players 0`` will launch a game with no CPU agents, taking interactive input for both agents. 
 
 ``--cpu-player 2`` will launch a game with two CPU agents, and takes no interactive input.
+
 
 
 #### Display Modes
