@@ -135,7 +135,7 @@ class ManualPolicy:
             ''' CLEAR PREVIOUSLY PREVIEWED MOVES '''
             env.unwrapped.board.squares_preview[:] = 0
             if action_prev != -1:
-                if not env.unwrapped.board.is_legal(action_prev):  # If this action is illegal
+                if not env.unwrapped.board.is_legal(action_prev, env.agents.index(agent)):  # If this action is illegal
                     action_prev = -1
                 else:
                     env.unwrapped.board.squares_preview[
