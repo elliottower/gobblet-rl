@@ -37,7 +37,7 @@ if __name__ == "__main__":
     env = gobblet_v1.env(render_mode="human", args=args)
     env.reset()
 
-    recorder = GIFRecorder(width=1000, height=1000)
+    recorder = GIFRecorder()
 
     env.render()  # need to render the environment before pygame can take user input
 

@@ -26,12 +26,15 @@ class ManualPolicy:
 
         while True:
             event = pygame.event.wait()
+
             if event.type == pygame.QUIT:
                 if recorder is not None:
                     recorder.end_recording()
                 pygame.quit()
                 pygame.display.quit()
                 sys.exit()
+
+            ''' GET MOUSE INPUT'''
             mousex, mousey = pygame.mouse.get_pos()
             width, height = pygame.display.get_surface().get_size()
             pos_x = 0
@@ -52,6 +55,7 @@ class ManualPolicy:
 
             agent_multiplier = 1 if agent == env.agents[0] else -1
 
+            ''' FIND PLACED PIECES '''
             placed_pieces = env.unwrapped.board.squares[env.unwrapped.board.squares.nonzero()]
             placed_pieces_agent = [a for a in placed_pieces if np.sign(a) == agent_multiplier]
             placed_pieces_agent_abs = [abs(p) for p in placed_pieces_agent]
@@ -66,66 +70,69 @@ class ManualPolicy:
                 piece = unplaced[-1]
                 piece_size_selected = (piece + 1) // 2
 
-            # Read keyboard input
+            ''' READ KEYBOARD INPUT'''
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    flag = True
-                    piece_cycle += 1
-                else:
-                    if event.key == pygame.K_1 and not picked_up:  # User inputs for pieces of size 1 (indices 1 and 2)
-                        piece_cycle = 0
-                        if 1 in unplaced:
-                            piece = 1
+                if not picked_up:
+                    if event.key == pygame.K_SPACE:   # Cycle through pieces (from largest to smallest)
+                        piece_cycle += 1
+
+                        cycle_choices = np.unique(
+                            [(p + 1) // 2 for p in unplaced])  # Transform [1,2,3,4,5,6] to [1,2,3)
+
+                        piece_size = cycle_choices[(np.amax(cycle_choices) - (piece_cycle + 1)) % len(cycle_choices)]
+                        piece_size_selected = piece_size
+
+                        if (piece_size * 2) - 1 in unplaced:  # Check if the first of this piece size is available
+                            piece = piece_size * 2 - 1
+                        else:
+                            piece = piece_size * 2            # Otherwise choose the second of this piece size
+                    else:
+                        if event.key == pygame.K_1:    # Select piece size 1
                             piece_size_selected = 1
-                        elif 2 in unplaced:
-                            piece = 2
-                            piece_size_selected = 1
-                        else:
-                            piece = -1
-                    elif event.key == pygame.K_2 and not picked_up:
-                        piece_cycle = 0
-                        if 3 in unplaced:
-                            piece = 3
+                            if 1 in unplaced:
+                                piece = 1
+                                piece_cycle = 2
+                            elif 2 in unplaced:
+                                piece = 2
+                                piece_cycle = 2
+                            else:
+                                piece = -1
+                        elif event.key == pygame.K_2:   # Select piece size 2
                             piece_size_selected = 2
-                        elif 4 in unplaced:
-                            piece = 4
-                            piece_size_selected = 2
-                        else:
-                            piece = -1
-                    elif event.key == pygame.K_3 and not picked_up:
-                        piece_cycle = 0
-                        if 5 in unplaced:
-                            piece = 5
+                            if 3 in unplaced:
+                                piece = 3
+                                piece_cycle = 1
+                            elif 4 in unplaced:
+                                piece = 4
+                                piece_cycle = 1
+                            else:
+                                piece = -1
+                        elif event.key == pygame.K_3:   # Select piece size 3
                             piece_size_selected = 3
-                        elif 6 in unplaced:
-                            piece = 6
-                            piece_size_selected = 3
-                        else:
-                            piece = -1
+                            if 5 in unplaced:
+                                piece = 5
+                                piece_cycle = 0
+                            elif 6 in unplaced:
+                                piece = 6
+                                piece_cycle = 0
+                            else:
+                                piece = -1
+
             # Don't render a preview if both pieces of a given size have been placed
             if piece != -1:
                 piece_size = (piece + 1) // 2
                 # Don't render a preview if both pieces of a given size have been placed
-                if piece_cycle:
-                    if piece_cycle and not picked_up:
-                        cycle_choices = np.unique(
-                            [(p + 1) // 2 for p in unplaced])  # Transform [1,2,3,4,5,6] to [1,2,3)
-                        piece_size = cycle_choices[
-                            (np.amax(cycle_choices) - (piece_cycle + 1)) % len(
-                                cycle_choices)]  # Cycle from largest to smallest
 
-                # If the hovered over position means placing a picked up piece in the same spot, mark it as illegal
-                if pos == picked_up_pos:
-                    action_prev = -1
-
-                # Get the action from the position the mouse cursor is currently hovering over
+                ''' GET PREVIEW ACTION '''
+                # Get the action from the preview (in position the mouse cursor is currently hovering over)
                 action_prev = env.unwrapped.board.get_action(pos, piece_size, env.agents.index(agent))
 
+            ''' CLEAR ACTION PREVIEW FOR ILLEGAL MOVES'''
             # If the hovered over position means placing a picked up piece in the same spot, mark it as illegal
-            if pos == picked_up_pos:
+            if pos == picked_up_pos or piece == -1:
                 action_prev = -1
 
-            # Clear previously previewed moves
+            ''' CLEAR PREVIOUSLY PREVIEWED MOVES '''
             env.unwrapped.board.squares_preview[:] = 0
             if action_prev != -1:
                 if not env.unwrapped.board.is_legal(action_prev):  # If this action is illegal
@@ -134,12 +141,13 @@ class ManualPolicy:
                     env.unwrapped.board.squares_preview[
                         pos + 9 * (piece_size - 1)] = agent_multiplier  # Preview this position
 
-            # Update the display with the previewed move
+            ''' UPDATE DISPLAY with previewed move'''
             env.render()
             pygame.display.update()
             if recorder is not None:
                 recorder.capture_frame(env.unwrapped.screen)
 
+            ''' PLACE A PIECE '''
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Pick up a piece (only able to if it has already been placed, and is not currently picked up)
                 if flatboard[pos] in placed_pieces_agent and not picked_up:
@@ -164,13 +172,13 @@ class ManualPolicy:
                             observation["action_mask"][:9 * (piece - 1)] = 0  # Zero out all the possible actions
                             observation["action_mask"][9 * (piece):] = 0
 
-                # If we are not picking a piece up, then try to place a piece, if it is legal to do so
+                # Place a piece (if it is legal to do so)
                 else:
                     if action_prev != -1:
                         env.unwrapped.board.squares_preview[pos + 9 * (piece_size - 1)] = 0
                         action = pos + 9 * (piece - 1)
                         break
-        return action
+        return np.int32(action)
 
     @property
     def available_agents(self):

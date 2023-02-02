@@ -30,6 +30,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from gobblet import gobblet_v1
 from gobblet.game.collector_manual_policy import ManualPolicyCollector
+from gobblet.game.utils import GIFRecorder
 import time
 
 
@@ -39,7 +40,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eps-test", type=float, default=0.05)
     parser.add_argument("--eps-train", type=float, default=0.1)
     parser.add_argument("--buffer-size", type=int, default=20000)
-    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr", type=float, default=1e-4) # TODO: Changing this to 1e-5 for some reason makes it pause after 3 or 4 epochs
     parser.add_argument(
         "--gamma", type=float, default=0.9, help="a smaller gamma favors earlier win"
     )
@@ -58,10 +59,11 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--render", type=float, default=0.1)
     parser.add_argument("--render_mode", type=str, default="human", choices=["human","rgb_array", "text", "text_full"], help="Choose the rendering mode for the game.")
-    parser.add_argument("--debug", action="store_true", help="enable to print extra debugging info")
-    parser.add_argument("--self_play", action="store_true", help="enable training via self-play (as opposed to fixed opponent)")
+    parser.add_argument("--debug", action="store_true", help="Flag to enable to print extra debugging info")
+    parser.add_argument("--self_play", action="store_true", help="Flag to enable training via self-play (as opposed to fixed opponent)")
     parser.add_argument("--cpu-players", type=int, default=2, choices=[1, 2], help="Number of CPU players (options: 1, 2)")
     parser.add_argument("--player", type=int, default=0, choices=[0,1], help="Choose which player to play as: red = 0, yellow = 1")
+    parser.add_argument("--record", action="store_true", help="Flag to save a recording of the game (game.gif)")
     parser.add_argument(
         "--win-rate",
         type=float,
@@ -312,7 +314,11 @@ def play(
     collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
 
     pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
-    manual_policy = gobblet_v1.ManualPolicy(pettingzoo_env) # Gobblet keyboard input requires access to raw_env (uses functions from board)
+    if args.record:
+        recorder = GIFRecorder()
+    else:
+        recorder = None
+    manual_policy = gobblet_v1.ManualPolicy(env=pettingzoo_env, agent_id=args.player, recorder=recorder) # Gobblet keyboard input requires access to raw_env (uses functions from board)
 
     # Get the first move from the CPU (human goes second))
     if args.player == 1:
@@ -320,8 +326,8 @@ def play(
 
     # Get the first move from the player
     else:
-        observation = {"observation": collector.data.obs.obs,
-                       "action_mask": collector.data.obs.mask}  # PettingZoo expects a dict with this format
+        observation = {"observation": collector.data.obs.obs.flatten(), # Observation not used for manual_policy, bu
+                       "action_mask": collector.data.obs.mask.flatten()}  # Collector mask: [1,54], PettingZoo: [54,]
         action = manual_policy(observation, pettingzoo_env.agents[0])
 
         result = collector.collect_result(action=action.reshape(1), render=args.render)
@@ -332,8 +338,8 @@ def play(
         if agent_id == pettingzoo_env.agents[args.player]:
             # action_mask = collector.data.obs.mask[0]
             # action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
-            observation = {"observation": collector.data.obs.obs,
-                            "action_mask": collector.data.obs.mask} # PettingZoo expects a dict with this format
+            observation = {"observation": collector.data.obs.obs.flatten(),
+                            "action_mask": collector.data.obs.mask.flatten()} # PettingZoo expects a dict with this format
             action = manual_policy(observation, agent_id)
 
             result = collector.collect_result(action=action.reshape(1), render=args.render)
@@ -347,8 +353,10 @@ if __name__ == "__main__":
     # train the agent and watch its performance in a match!
     args = get_args()
     result, agent = train_agent(args)
+    print("Starting game...")
     if args.cpu_players == 2:
-
         watch(args, agent)
     else:
         play(args, agent)
+
+        #TODO: debug why it seems to not let you move when your smaller pieces are covered (print out the currently selected size and the

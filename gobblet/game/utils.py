@@ -32,11 +32,11 @@ import os
 import re
 
 def get_project_root() -> Path:
-    """return Path to the project directory, top folder of rlskyjo
+    """return Path to the project directory, top folder of gobblet-rl
     Returns:
         Path: Path to the project directory
     """
-    return Path(__file__).parent.parent.resolve()
+    return Path(__file__).parent.parent.parent.resolve()
 
 def find_file_in_subdir(parent_dir: Union[Path, str], file_str: Union[Path, str], regex_match: str = None) -> Union[str, None]:
     files = glob.glob(
@@ -55,20 +55,18 @@ class GIFRecorder:
     """
         This class is used to record a PyGame surface and save it to a gif file.
     """
-    def __init__(self, width, height, out_file=f'game.gif'):
+    def __init__(self, out_file=f'game.gif'):
         """
-        Initialize the recorder with parameters of the surface.
-        :param width: Width of the surface to capture
-        :param height: Height of the surface to capture
-        :param fps: Frames per second
+        Initialize the recorder
         :param out_file: Output file to save the recording
         """
-        print(f'Initializing GifWriter with parameters width:{width} height:{height}')
+        print(f'Initializing GIF Recorder...')
         print(f'Output of the recording will be saved to {out_file}.')
         self.filename_list = []
         self.frame_num = 0
         self.start_time = time.time()
-        self.path = os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir), os.pardir) # Root project directoy
+        self.path = get_project_root()
+        # self.path = os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir), os.pardir) # Root project directoy
         print(self.path)
         self.out_file = out_file
         self.ended = False
