@@ -45,7 +45,7 @@ env = gobblet_v1.env()
 
 In the terminal, run the following:
 ```
-python gobblet/example_DQN_tianshou.py --epoch 50 --player 1 --cpu-players 2
+python gobblet/example_tianshou_DQN.py --epoch 50 --player 1 --cpu-players 2
 ```
 
 This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and launch an interactive game against the pre-trained agent. 
