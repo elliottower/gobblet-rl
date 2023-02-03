@@ -22,7 +22,7 @@ import torch
 from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv
 from tianshou.env.pettingzoo_env import PettingZooEnv
-from tianshou.policy import BasePolicy, DQNPolicy, MultiAgentPolicyManager, RandomPolicy
+from tianshou.policy import BasePolicy, DQNPolicy, MultiAgentPolicyManager, RandomPolicy, RainbowPolicy, PGPolicy # Rainbow and PG don't work directly
 from tianshou.trainer import offpolicy_trainer
 from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
@@ -31,7 +31,6 @@ from torch.utils.tensorboard import SummaryWriter
 from gobblet import gobblet_v1
 from gobblet.game.collector_manual_policy import ManualPolicyCollector
 from gobblet.game.utils import GIFRecorder
-from gobblet.game.greedy_policy import GreedyPolicy
 import time
 
 
@@ -41,7 +40,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eps-test", type=float, default=0.05)
     parser.add_argument("--eps-train", type=float, default=0.1)
     parser.add_argument("--buffer-size", type=int, default=20000)
-    parser.add_argument("--lr", type=float, default=1e-4) # TODO: Changing this to 1e-5 for some reason makes it pause after 3 or 4 epochs
+    parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument(
         "--gamma", type=float, default=0.9, help="a smaller gamma favors earlier win"
     )
@@ -134,7 +133,7 @@ def get_agents(
         ).to(args.device)
         if optim is None:
             optim = torch.optim.Adam(net.parameters(), lr=args.lr)
-        agent_learn = DQNPolicy(
+        agent_learn = RainbowPolicy(
             net,
             optim,
             args.gamma,
@@ -146,26 +145,12 @@ def get_agents(
 
     if agent_opponent is None:
         if args.self_play:
-            # Create a new network with the same shape
-            net_opponent = Net(
-                args.state_shape,
-                args.action_shape,
-                hidden_sizes=args.hidden_sizes,
-                device=args.device,
-            ).to(args.device)
-            agent_opponent = DQNPolicy(
-                net_opponent,
-                optim,
-                args.gamma,
-                args.n_step,
-                target_update_freq=args.target_update_freq,
-            )
+            agent_opponent = deepcopy(agent_learn)
         elif args.opponent_path:
             agent_opponent = deepcopy(agent_learn)
             agent_opponent.load_state_dict(torch.load(args.opponent_path))
         else:
-            # agent_opponent = RandomPolicy()
-            agent_opponent = GreedyPolicy() # Greedy policy is a difficult opponent, should yeild much better results than random
+            agent_opponent = RandomPolicy()
 
     if args.agent_id == 1:
         agents = [agent_learn, agent_opponent]
@@ -211,7 +196,7 @@ def train_agent(
     train_collector.collect(n_step=args.batch_size * args.training_num)
 
     # ======== tensorboard logging setup =========
-    log_path = os.path.join(args.logdir, "gobblet", "dqn")
+    log_path = os.path.join(args.logdir, "gobblet", "rainbow")
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
     logger = TensorboardLogger(writer)
@@ -222,7 +207,7 @@ def train_agent(
             model_save_path = args.model_save_path
         else:
             model_save_path = os.path.join(
-                args.logdir, "gobblet", "dqn", "policy.pth"
+                args.logdir, "gobblet", "rainbow", "policy.pth"
             )
         torch.save(
             policy.policies[agents[args.agent_id - 1]].state_dict(), model_save_path
@@ -235,15 +220,13 @@ def train_agent(
         policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_train)
 
     def train_fn_selfplay(epoch, env_step):
-        policy.policies[agents[0]].set_eps(args.eps_train) # Same as train_fn but for both agents instead of only learner
-        policy.policies[agents[1]].set_eps(args.eps_train)
+        policy.policies[agents[:]].set_eps(args.eps_train) # Same as train_fn but for both agents instead of only learner
 
     def test_fn(epoch, env_step):
         policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
 
     def test_fn_selfplay(epoch, env_step):
-        policy.policies[agents[0]].set_eps(args.eps_test) # Same as test_fn but for both agents instead of only learner
-        policy.policies[agents[1]].set_eps(args.eps_test)
+        policy.policies[agents[:]].set_eps(args.eps_test) # Same as test_fn but for both agents instead of only learner
 
 
     def reward_metric(rews):
@@ -259,8 +242,8 @@ def train_agent(
         args.step_per_collect,
         args.test_num,
         args.batch_size,
-        train_fn=train_fn_selfplay if args.self_play else train_fn,
-        test_fn=test_fn_selfplay if args.self_play else test_fn,
+        train_fn=train_fn if not args.self_play else train_fn_selfplay,
+        test_fn=test_fn if not args.self_play else train_fn_selfplay,
         stop_fn=stop_fn,
         save_best_fn=save_best_fn,
         update_per_step=args.update_per_step,
@@ -286,9 +269,7 @@ def watch(
     if not args.self_play:
         policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
     else:
-        policy.policies[agents[0]].set_eps(args.eps_test)
-        policy.policies[agents[1]].set_eps(args.eps_test)
-
+        policy.policies[agents[:]].set_eps(args.eps_test)
     collector = Collector(policy, env, exploration_noise=True)
 
     # First step (while loop stopping conditions are not defined until we run the first step)
@@ -330,9 +311,6 @@ def play(
     policy.eval()
     policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
 
-    # Experimental: let the CPU agent to continue training (TODO: check if this actually changes things meaningfully)
-    # policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_train)
-
     collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
 
     pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
@@ -342,10 +320,24 @@ def play(
         recorder = None
     manual_policy = gobblet_v1.ManualPolicy(env=pettingzoo_env, agent_id=args.player, recorder=recorder) # Gobblet keyboard input requires access to raw_env (uses functions from board)
 
-    while pettingzoo_env.agents:
+    # Get the first move from the CPU (human goes second))
+    if args.player == 1:
+        result = collector.collect(n_step=1, render=args.render)
+
+    # Get the first move from the player
+    else:
+        observation = {"observation": collector.data.obs.obs.flatten(), # Observation not used for manual_policy, bu
+                       "action_mask": collector.data.obs.mask.flatten()}  # Collector mask: [1,54], PettingZoo: [54,]
+        action = manual_policy(observation, pettingzoo_env.agents[0])
+
+        result = collector.collect_result(action=action.reshape(1), render=args.render)
+
+    while not (collector.data.terminated or collector.data.truncated):
         agent_id = collector.data.obs.agent_id
         # If it is the players turn and there are less than 2 CPU players (at least one human player)
         if agent_id == pettingzoo_env.agents[args.player]:
+            # action_mask = collector.data.obs.mask[0]
+            # action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
             observation = {"observation": collector.data.obs.obs.flatten(),
                             "action_mask": collector.data.obs.mask.flatten()} # PettingZoo expects a dict with this format
             action = manual_policy(observation, agent_id)
@@ -354,19 +346,15 @@ def play(
         else:
             result = collector.collect(n_step=1, render=args.render)
 
-        if collector.data.terminated or collector.data.truncated:
-            rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
-            if recorder is not None:
-                recorder.end_recording()
+    rews, lens = result["rews"], result["lens"]
+    print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!
     args = get_args()
-    print("Training agent...")
     result, agent = train_agent(args)
-    print("Starting game...")
     if args.cpu_players == 2:
+
         watch(args, agent)
     else:
         play(args, agent)

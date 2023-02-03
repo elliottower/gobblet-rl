@@ -41,7 +41,18 @@ from gobblet import gobblet_v1
 env = gobblet_v1.env()
 ```
 
-### Play against a DQL agent trained with Tianshou
+### Play against a greedy agent
+
+In the terminal, run the following:
+```
+python gobblet/example_tianshou_DQN.py --cpu-players 1
+```
+
+This will launch a game vs a greedy agent, which is a very strong baseline. This agent considers all possible moves with a depth of 2, winning if possible, blocking enemy wins, and even forcing the enemy to make losing moves.
+
+Note: this policy exploits domain knowledge to reconstruct the internal game board from the observation (perfect information) and directly uses functions from `board.py`. Tianshou policies do not get direct access to the environment, only observations/action masks. So the greedy agent should not be directly compared with other RL agents.
+
+### Play against a DQN agent trained with Tianshou
 
 In the terminal, run the following:
 ```
@@ -58,6 +69,9 @@ In the terminal, run the following:
 ```
 python gobblet/examples/example_user_input.py"
 ```
+
+Note: Interactive play can be enabled in other scripts using the argument `--num-cpu 1`
+
 To select a piece size, press a number key `1`, `2`, or `3`, or press `space` to cycle through pieces. Placing a piece is done by clicking on a square on the board. A preview will appear showing legal moves with the selected piece size. Clicking on an already placed piece will pick it up and prompt you to place it in a new location (re-placing in the same location is an illegal move).
 
 ### Create screen recording of a game

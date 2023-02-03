@@ -204,7 +204,7 @@ class raw_env(AECEnv):
     def _legal_moves(self):
         legal_moves = []
         for action in range(54):
-            if self.board.is_legal(action):
+            if self.board.is_legal(action, self.agents.index(self.agent_selection)):
                 legal_moves.append(action)
         return legal_moves
 
@@ -216,7 +216,6 @@ class raw_env(AECEnv):
         ):
             return self._was_dead_step(action)
         # check if input action is a valid move (0 == empty spot)
-        # assert self.board.is_legal(action), "played illegal move"
         if not self.board.is_legal(action, self.agent_selection) and self.debug:
             print("piece: ", self.board.get_piece_from_action(action))
             print("piece_size: ", self.board.get_piece_size_from_action(action))

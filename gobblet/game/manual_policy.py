@@ -67,8 +67,11 @@ class ManualPolicy:
             if piece_size_selected > 0:
                 piece = piece
             else:
-                piece = unplaced[-1]
-                piece_size_selected = (piece + 1) // 2
+                if len(unplaced) > 0:
+                    piece = unplaced[-1]
+                    piece_size_selected = (piece + 1) // 2
+                else:
+                    piece = -1
 
             ''' READ KEYBOARD INPUT'''
             if event.type == pygame.KEYDOWN:
@@ -79,7 +82,10 @@ class ManualPolicy:
                         cycle_choices = np.unique(
                             [(p + 1) // 2 for p in unplaced])  # Transform [1,2,3,4,5,6] to [1,2,3)
 
-                        piece_size = cycle_choices[(np.amax(cycle_choices) - (piece_cycle + 1)) % len(cycle_choices)]
+                        if len(cycle_choices) > 0:
+                            piece_size = cycle_choices[(np.amax(cycle_choices) - (piece_cycle + 1)) % len(cycle_choices)]
+                        # else:
+                        #   piece_size = -1
                         piece_size_selected = piece_size
 
                         if (piece_size * 2) - 1 in unplaced:  # Check if the first of this piece size is available
@@ -147,7 +153,7 @@ class ManualPolicy:
             if recorder is not None:
                 recorder.capture_frame(env.unwrapped.screen)
 
-            ''' PLACE A PIECE '''
+            ''' PICK UP / PLACE A PIECE '''
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Pick up a piece (only able to if it has already been placed, and is not currently picked up)
                 if flatboard[pos] in placed_pieces_agent and not picked_up:

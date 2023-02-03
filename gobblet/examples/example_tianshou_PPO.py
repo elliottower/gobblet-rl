@@ -22,7 +22,7 @@ import torch
 from tianshou.data import Collector, VectorReplayBuffer
 from tianshou.env import DummyVectorEnv
 from tianshou.env.pettingzoo_env import PettingZooEnv
-from tianshou.policy import BasePolicy, DQNPolicy, MultiAgentPolicyManager, RandomPolicy
+from tianshou.policy import BasePolicy, DQNPolicy, MultiAgentPolicyManager, RandomPolicy, PPOPolicy
 from tianshou.trainer import offpolicy_trainer
 from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
@@ -31,7 +31,6 @@ from torch.utils.tensorboard import SummaryWriter
 from gobblet import gobblet_v1
 from gobblet.game.collector_manual_policy import ManualPolicyCollector
 from gobblet.game.utils import GIFRecorder
-from gobblet.game.greedy_policy import GreedyPolicy
 import time
 
 
@@ -134,7 +133,7 @@ def get_agents(
         ).to(args.device)
         if optim is None:
             optim = torch.optim.Adam(net.parameters(), lr=args.lr)
-        agent_learn = DQNPolicy(
+        agent_learn = PPOPolicy(
             net,
             optim,
             args.gamma,
@@ -146,26 +145,13 @@ def get_agents(
 
     if agent_opponent is None:
         if args.self_play:
-            # Create a new network with the same shape
-            net_opponent = Net(
-                args.state_shape,
-                args.action_shape,
-                hidden_sizes=args.hidden_sizes,
-                device=args.device,
-            ).to(args.device)
-            agent_opponent = DQNPolicy(
-                net_opponent,
-                optim,
-                args.gamma,
-                args.n_step,
-                target_update_freq=args.target_update_freq,
-            )
+            agent_opponent = deepcopy(agent_learn)
         elif args.opponent_path:
             agent_opponent = deepcopy(agent_learn)
             agent_opponent.load_state_dict(torch.load(args.opponent_path))
         else:
             # agent_opponent = RandomPolicy()
-            agent_opponent = GreedyPolicy() # Greedy policy is a difficult opponent, should yeild much better results than random
+            agent_opponent = deepcopy(agent_learn)
 
     if args.agent_id == 1:
         agents = [agent_learn, agent_opponent]
@@ -260,7 +246,7 @@ def train_agent(
         args.test_num,
         args.batch_size,
         train_fn=train_fn_selfplay if args.self_play else train_fn,
-        test_fn=test_fn_selfplay if args.self_play else test_fn,
+        test_fn=test_fn_selfplay if args.self_play else train_fn,
         stop_fn=stop_fn,
         save_best_fn=save_best_fn,
         update_per_step=args.update_per_step,
@@ -327,11 +313,11 @@ def play(
     policy, optim, agents = get_agents(
         args, agent_learn=agent_learn, agent_opponent=agent_opponent
     )
-    policy.eval()
-    policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
+    # policy.eval()
+    # policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_test)
 
-    # Experimental: let the CPU agent to continue training (TODO: check if this actually changes things meaningfully)
-    # policy.policies[agents[args.agent_id - 1]].set_eps(args.eps_train)
+    # Set the CPU agent to continue training
+    policy.policies[agents[1 - args.player]].set_eps(args.eps_train)
 
     collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
 
@@ -346,6 +332,8 @@ def play(
         agent_id = collector.data.obs.agent_id
         # If it is the players turn and there are less than 2 CPU players (at least one human player)
         if agent_id == pettingzoo_env.agents[args.player]:
+            # action_mask = collector.data.obs.mask[0]
+            # action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
             observation = {"observation": collector.data.obs.obs.flatten(),
                             "action_mask": collector.data.obs.mask.flatten()} # PettingZoo expects a dict with this format
             action = manual_policy(observation, agent_id)
@@ -357,16 +345,15 @@ def play(
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
             print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
-            if recorder is not None:
-                recorder.end_recording()
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!
     args = get_args()
-    print("Training agent...")
     result, agent = train_agent(args)
     print("Starting game...")
     if args.cpu_players == 2:
         watch(args, agent)
     else:
         play(args, agent)
+
+        #TODO: debug why it seems to not let you move when your smaller pieces are covered (print out the currently selected size and the

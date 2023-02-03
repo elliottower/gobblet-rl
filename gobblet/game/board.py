@@ -1,7 +1,7 @@
 import numpy as np
 
 class Board:
-    def __init__(self):
+    def __init__(self, squares=None):
         # internally self.board.squares holds a representation of the gobblet board, consisting of three stacked 3x3 boards, one for each piece size.
         # We flatten it for simplicity, from [3,3,3] to [27,]
 
@@ -92,11 +92,13 @@ class Board:
         if any(board[piece_size-1] == piece * agent_multiplier):
             current_loc = np.where(board[piece_size-1] == piece * agent_multiplier)[0] # Returns array of values where piece is placed
             if len(current_loc) > 1:
-                raise Exception("Error: piece has been used twice")
+                raise Exception("PIECE HAS BEEN USED TWICE")
+                return False # Piece has been used twice (not valid)
             else:
                 current_loc = current_loc[0] # Current location [0-27]
             # If this piece is currently covered, moving it is not a legal action
-            if self.check_covered()[current_loc] == 1:
+
+            if self.check_covered().reshape(3,9)[piece_size - 1][current_loc] == 1:
                 return False
 
         # If this piece has not been placed
@@ -150,6 +152,9 @@ class Board:
 
         self.winning_combinations = winning_combinations
 
+    def print(self):
+        print(self.get_flatboard().reshape(3,3).transpose())
+
     # returns flattened board consisting of only top pieces (excluding pieces which are gobbled by other pieces)
     def get_flatboard(self):
         flatboard = np.zeros(9)
@@ -174,10 +179,10 @@ class Board:
         for combination in self.winning_combinations:
             states = []
             for index in combination:
-                states.append(flatboard[index]) # default: self.squares[index]
+                states.append(flatboard[index])
             if all(x > 0 for x in states):
                 winner = 1
-            if all(x < 0 for x in states): # Change to -1 probably?
+            if all(x < 0 for x in states):
                 winner = -1
         return winner
 
@@ -215,4 +220,4 @@ class Board:
         print("squares with covered pieces: ", covered_squares)
 
     def __str__(self):
-        return str(self.squares)
+        return str(self.squares.reshape(3,3,3))
