@@ -16,4 +16,5 @@ gobblet/game/__PYCACHE__/*
 /gobblet/examples/example_cleanRL_batch.py
 /tests/test.py
 *.gif
+*/__pycache__/
 

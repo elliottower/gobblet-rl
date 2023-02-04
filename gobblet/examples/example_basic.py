@@ -53,6 +53,6 @@ if __name__ == "__main__":
             action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
 
             if args.render_mode == "human":
-                time.sleep(5) # Wait .5 seconds between moves so the user can follow the sequence of moves
+                time.sleep(.5) # Wait .5 seconds between moves so the user can follow the sequence of moves
 
             env.step(action)
