@@ -58,6 +58,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cpu-players", type=int, default=1, choices=[1, 2], help="Number of CPU players (options: 1, 2)")
     parser.add_argument("--player", type=int, default=0, choices=[0,1], help="Choose which player to play as: red = 0, yellow = 1")
     parser.add_argument("--record", action="store_true", help="Flag to save a recording of the game (game.gif)")
+    parser.add_argument("--depth", type=int, default=2, choices=[1, 2, 3], help="Search depth for greedy agent. Options: 1,2,3")
     parser.add_argument(
         "--win-rate",
         type=float,
@@ -103,7 +104,7 @@ def get_args() -> argparse.Namespace:
 
 def get_agents() -> Tuple[BasePolicy, list]:
     env = get_env()
-    agents = [GreedyPolicy(), GreedyPolicy()]
+    agents = [GreedyPolicy(depth=args.depth), GreedyPolicy(depth=args.depth)]
     policy = MultiAgentPolicyManager(agents, env)
     return policy, env.agents
 
@@ -125,15 +126,19 @@ def watch() -> None:
     else:
         recorder = None
 
-    manual_policy = gobblet_v1.ManualPolicy(env=pettingzoo_env, agent_id=args.player, recorder=recorder) # Gobblet keyboard input requires access to raw_env (uses functions from board)
     while pettingzoo_env.agents:
-        # agent_id = collector.data.obs.agent_id
-
         result = collector.collect(n_step=1, render=args.render)
+        if recorder is not None:
+            recorder.capture_frame(screen)
+            time.sleep(0.25)
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, args.player].mean()}, length: {lens.mean()}")
+            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{policy.policies[agents[0]]}]")
+            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{policy.policies[agents[1]]}]")
+            if recorder is not None:
+                recorder.end_recording(screen)
+                recorder = None
 
 # ======== allows the user to input moves and play vs a greedy agent ======
 def play() -> None:
@@ -153,8 +158,6 @@ def play() -> None:
         agent_id = collector.data.obs.agent_id
         # If it is the players turn and there are less than 2 CPU players (at least one human player)
         if agent_id == pettingzoo_env.agents[args.player]:
-            # action_mask = collector.data.obs.mask[0]
-            # action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
             observation = {"observation": collector.data.obs.obs.flatten(),
                             "action_mask": collector.data.obs.mask.flatten()} # PettingZoo expects a dict with this format
             action = manual_policy(observation, agent_id)
@@ -162,10 +165,15 @@ def play() -> None:
             result = collector.collect_result(action=action.reshape(1), render=args.render)
         else:
             result = collector.collect(n_step=1, render=args.render)
+            if recorder is not None:
+                recorder.capture_frame(pettingzoo_env.unwrapped.screen)
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, args.player].mean()}, length: {lens.mean()}")
+            print(f"\nFinal reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]")
+            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{policy.policies[agents[1-args.player]]}]")
+            if recorder is not None:
+                recorder.end_recording(pettingzoo_env.unwrapped.screen)
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!

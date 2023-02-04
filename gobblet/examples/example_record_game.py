@@ -54,7 +54,7 @@ if __name__ == "__main__":
         if termination or truncation:
             print(f"Agent: ({agent}), Reward: {reward}, info: {info}")
 
-            recorder.end_recording()
+            recorder.end_recording(env.unwrapped.screen)
 
             env.step(None)
             continue

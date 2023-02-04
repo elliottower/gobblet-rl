@@ -29,7 +29,7 @@ class ManualPolicy:
 
             if event.type == pygame.QUIT:
                 if recorder is not None:
-                    recorder.end_recording()
+                    recorder.end_recording(env.unwrapped.screen)
                 pygame.quit()
                 pygame.display.quit()
                 sys.exit()

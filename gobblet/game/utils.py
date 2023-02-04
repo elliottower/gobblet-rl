@@ -1,6 +1,7 @@
 # adapted from pettingzoo.classic.connect_four
 import os
 import pygame
+import sys
 
 def get_image(path):
 
@@ -83,18 +84,23 @@ class GIFRecorder:
 
             Note: surface must have the dimensions specified in the constructor.
         """
-        # transform the pixels to the format used by open-cv
-        self.filename_list.append(os.path.join(self.path, f'temp_{time.time()}_' + str(self.frame_num) + '.png'))
-        pygame.image.save(surf, self.filename_list[-1])
-        self.frame_num += 1
+        if not self.ended: # Stop saving frames after we have exported the recording
+            # transform the pixels to the format used by open-cv
+            self.filename_list.append(os.path.join(self.path, f'temp_{time.time()}_' + str(self.frame_num) + '.png'))
+            pygame.image.save(surf, self.filename_list[-1])
+            self.frame_num += 1
 
     # Convert indivual image files to GIF
-    def end_recording(self):
+    def end_recording(self, surf):
         """
         Call this method to stop recording.
         :return: None
         """
         if not self.ended:
+            # Add 10 frames to the end of the video so people have a chance to see the move
+            for i in range(10):
+                self.capture_frame(surf)
+
             # stop recording
             duration = time.time() - self.start_time
             seconds_per_frame = duration/ self.frame_num

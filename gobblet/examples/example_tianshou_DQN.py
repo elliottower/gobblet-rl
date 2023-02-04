@@ -290,31 +290,27 @@ def watch(
         policy.policies[agents[1]].set_eps(args.eps_test)
 
     collector = Collector(policy, env, exploration_noise=True)
+    pettingzoo_env = env.workers[0].env.env  # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
+    if args.record:
+        recorder = GIFRecorder()
+        recorder.capture_frame(pettingzoo_env.unwrapped.screen)
+    else:
+        recorder = None
 
-    # First step (while loop stopping conditions are not defined until we run the first step)
-    result = collector.collect(n_step=1, render=args.render)
-    time.sleep(0.25)
-
-    while not (collector.data.terminated or collector.data.truncated):
+    while pettingzoo_env.agents:
         result = collector.collect(n_step=1, render=args.render)
-        time.sleep(0.25) # Slow down rendering so the actions can be seen sequentially (otherwise moves happen too fast)
+        if recorder is not None:
+            recorder.capture_frame(pettingzoo_env.unwrapped.screen)
 
-    rews, lens = result["rews"], result["lens"]
-    print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
+        time.sleep(0.25)
 
-# TODO: Look more into Tianshou and see if self play is possible
-# For watching I think it could just be the same policy for both agents, but for training I think self play would be different
-def watch_selfplay(args, agent):
-    raise NotImplementedError()
-    env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, debug=args.debug)])
-    agent.set_eps(args.eps_test)
-    policy = MultiAgentPolicyManager([agent, deepcopy(agent)], env) # fixed here
-    policy.eval()
-    collector = Collector(policy, env)
-    result = collector.collect(n_episode=1, render=args.render)
-    rews, lens = result["rews"], result["lens"]
-    print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()}")
-
+        if collector.data.terminated or collector.data.truncated:
+            rews, lens = result["rews"], result["lens"]
+            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{policy.policies[agents[0]]}]")
+            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{policy.policies[agents[1]]}]")
+            if recorder is not None:
+                recorder.end_recording(pettingzoo_env.unwrapped.screen)
+                recorder = None
 
 # ======== allows the user to input moves and play vs a pre-trained agent ======
 def play(
@@ -336,12 +332,12 @@ def play(
     collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
 
     pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
+
     if args.record:
         recorder = GIFRecorder()
     else:
         recorder = None
     manual_policy = gobblet_v1.ManualPolicy(env=pettingzoo_env, agent_id=args.player, recorder=recorder) # Gobblet keyboard input requires access to raw_env (uses functions from board)
-
     while pettingzoo_env.agents:
         agent_id = collector.data.obs.agent_id
         # If it is the players turn and there are less than 2 CPU players (at least one human player)
@@ -354,11 +350,16 @@ def play(
         else:
             result = collector.collect(n_step=1, render=args.render)
 
+            if recorder is not None:
+                recorder.capture_frame(pettingzoo_env.unwrapped.screen)
+
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, args.agent_id - 1].mean()}, length: {lens.mean()}")
+            print(f"Final reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]")
+            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{policy.policies[agents[1-args.player]]}]")
             if recorder is not None:
-                recorder.end_recording()
+                recorder.end_recording(pettingzoo_env.unwrapped.screen)
+                recorder = None
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!
