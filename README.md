@@ -1,6 +1,6 @@
 # gobblet-rl
 
-[![PyPI version](https://badge.fury.io/py/gobblet-rl.svg?branch=master&kill_cache)](https://badge.fury.io/py/gobblet-rl) 
+[![PyPI version](https://badge.fury.io/py/gobblet-rl.svg?branch=master&kill_cache=1)](https://badge.fury.io/py/gobblet-rl) 
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/elliottower/gobblet-rl/blob/main/LICENSE)
 
 Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) and [Pygame](https://github.com/pygame/pygame).
