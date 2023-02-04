@@ -8,6 +8,7 @@ authors = [
   { name="Elliot Tower", email="elliot@elliottower.com" },
 ]
 description = "Multi-Agent Reinforcement Learning Environment for the board game Gobblet using PettingZoo."
+readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["gobblet", "rl", "reinforcement learning", "pettingzoo", "gymnasium", "pygame", "tianshou"]
 license = {file = 'LICENSE'}
@@ -17,11 +18,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dynamic=["version", "readme", "dependencies"]
+dynamic=["version", "dependencies"]
 
 [tool.setuptools.dynamic]
 version = {attr = "gobblet.__version__"}
-readme = {file = ["README.md"]}
 dependencies = {file = ["requirements.txt"]}
 
 [project.urls]
