@@ -10,12 +10,16 @@ from gobblet.game.board import Board
 
 class GreedyPolicy(BasePolicy):
     """
-    Basic greedy policy which checks if a move results in a victory, and if it sets the opponent up to win (or lose) in the next turn
+    Basic greedy policy which checks if a move results in a victory, and if it sets the opponent up to win (or lose) in the next turn.
+    The depth argument controls the agent's search depth (default of 2 is a balance between computational efficiency and optimal play)
+     * depth = 1: Agent considers moves which it can use to directly win
+     * depth = 2: Agent also considers moves it can take to block the opponent from winning next turn
+     * depth = 3: Agent also considers moves which set it up to win in two moves: no matter waht opponents does in retaliation (unblockable wins)
     """
 
     def __init__(
         self,
-        depth: Optional[int] = None,
+        depth: Optional[int] = 2,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)

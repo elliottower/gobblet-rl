@@ -129,15 +129,15 @@ def watch() -> None:
     while pettingzoo_env.agents:
         result = collector.collect(n_step=1, render=args.render)
         if recorder is not None:
-            recorder.capture_frame(screen)
+            recorder.capture_frame(pettingzoo_env.unwrapped.screen)
             time.sleep(0.25)
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{policy.policies[agents[0]]}]")
-            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{policy.policies[agents[1]]}]")
+            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{type(policy.policies[agents[0]]).__name__}]")
+            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1]]).__name__}]")
             if recorder is not None:
-                recorder.end_recording(screen)
+                recorder.end_recording(pettingzoo_env.unwrapped.screen)
                 recorder = None
 
 # ======== allows the user to input moves and play vs a greedy agent ======
@@ -171,7 +171,7 @@ def play() -> None:
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
             print(f"\nFinal reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]")
-            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{policy.policies[agents[1-args.player]]}]")
+            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1-args.player]]).__name__}]")
             if recorder is not None:
                 recorder.end_recording(pettingzoo_env.unwrapped.screen)
 

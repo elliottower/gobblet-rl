@@ -306,8 +306,8 @@ def watch(
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{policy.policies[agents[0]]}]")
-            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{policy.policies[agents[1]]}]")
+            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{type(policy.policies[agents[0]]).__name__}]")
+            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1]]).__name__}]")
             if recorder is not None:
                 recorder.end_recording(pettingzoo_env.unwrapped.screen)
                 recorder = None
@@ -356,7 +356,7 @@ def play(
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
             print(f"Final reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]")
-            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{policy.policies[agents[1-args.player]]}]")
+            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1-args.player]]).__name__}]")
             if recorder is not None:
                 recorder.end_recording(pettingzoo_env.unwrapped.screen)
                 recorder = None
@@ -364,6 +364,8 @@ def play(
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!
     args = get_args()
+    if args.player == 1:
+        args.agent_id = 1 # Ensures trained agent is in the  correct spot
     print("Training agent...")
     result, agent = train_agent(args)
     print("Starting game...")
