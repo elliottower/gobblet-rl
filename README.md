@@ -46,7 +46,7 @@ env = gobblet_v1.env()
 
 In the terminal, run the following:
 ```
-python gobblet/example_tianshou_DQN.py --cpu-players 1
+python gobblet/example_tianshou_greedy.py --cpu-players 1
 ```
 
 This will launch a game vs a greedy agent, which is a very strong baseline. This agent considers all possible moves with a depth of 2, winning if possible, blocking enemy wins, and even forcing the enemy to make losing moves.
@@ -63,6 +63,9 @@ python gobblet/example_tianshou_DQN.py --epoch 50 --player 1 --cpu-players 2
 This will train a [DQN](https://tianshou.readthedocs.io/en/master/tutorials/dqn.html) model from Tianshou for 50 epochs, and launch an interactive game against the pre-trained agent. 
 
 Use the argument ``--cpu-player`` to determine the number of CPU agents (1 or 2)  and ``--player`` to choose which agent goes first (human first: 0, CPU first: 1)
+
+Use the argument ``--self-play`` to train agents using self-play.
+
 
 ### Play an interactive game
 
