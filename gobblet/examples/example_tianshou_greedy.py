@@ -1,31 +1,18 @@
 # adapted from https://github.com/Farama-Foundation/PettingZoo/blob/master/tutorials/Tianshou/3_cli_and_logging.py
-"""
-This is a full example of using Tianshou with MARL to train agents, complete with argument parsing (CLI) and logging.
-
-Author: Will (https://github.com/WillDudley)
-
-Python version used: 3.8.10
-
-Requirements:
-pettingzoo == 1.22.0
-git+https://github.com/thu-ml/tianshou
-"""
 
 import argparse
-from typing import Optional, Tuple
-
+import time
+from typing import Tuple
 
 import torch
 from tianshou.env import DummyVectorEnv
 from tianshou.env.pettingzoo_env import PettingZooEnv
-from tianshou.policy import BasePolicy, DQNPolicy, MultiAgentPolicyManager, RandomPolicy
-
+from tianshou.policy import BasePolicy, MultiAgentPolicyManager
 
 from gobblet import gobblet_v1
 from gobblet.game.collector_manual_policy import ManualPolicyCollector
-from gobblet.game.utils import GIFRecorder
 from gobblet.game.greedy_policy_tianshou import GreedyPolicy
-import time
+from gobblet.game.utils import GIFRecorder
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -34,7 +21,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eps-test", type=float, default=0.05)
     parser.add_argument("--eps-train", type=float, default=0.1)
     parser.add_argument("--buffer-size", type=int, default=20000)
-    parser.add_argument("--lr", type=float, default=1e-4) # TODO: Changing this to 1e-5 for some reason makes it pause after 3 or 4 epochs
+    parser.add_argument(
+        "--lr", type=float, default=1e-4
+    )  # TODO: Changing this to 1e-5 for some reason makes it pause after 3 or 4 epochs
     parser.add_argument(
         "--gamma", type=float, default=0.9, help="a smaller gamma favors earlier win"
     )
@@ -52,13 +41,49 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--test-num", type=int, default=10)
     parser.add_argument("--logdir", type=str, default="log")
     parser.add_argument("--render", type=float, default=0.1)
-    parser.add_argument("--render_mode", type=str, default="human", choices=["human","rgb_array", "text", "text_full"], help="Choose the rendering mode for the game.")
-    parser.add_argument("--debug", action="store_true", help="Flag to enable to print extra debugging info")
-    parser.add_argument("--self_play", action="store_true", help="Flag to enable training via self-play (as opposed to fixed opponent)")
-    parser.add_argument("--cpu-players", type=int, default=1, choices=[1, 2], help="Number of CPU players (options: 1, 2)")
-    parser.add_argument("--player", type=int, default=0, choices=[0,1], help="Choose which player to play as: red = 0, yellow = 1")
-    parser.add_argument("--record", action="store_true", help="Flag to save a recording of the game (game.gif)")
-    parser.add_argument("--depth", type=int, default=2, choices=[1, 2, 3], help="Search depth for greedy agent. Options: 1,2,3")
+    parser.add_argument(
+        "--render_mode",
+        type=str,
+        default="human",
+        choices=["human", "rgb_array", "text", "text_full"],
+        help="Choose the rendering mode for the game.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Flag to enable to print extra debugging info",
+    )
+    parser.add_argument(
+        "--self_play",
+        action="store_true",
+        help="Flag to enable training via self-play (as opposed to fixed opponent)",
+    )
+    parser.add_argument(
+        "--cpu-players",
+        type=int,
+        default=1,
+        choices=[1, 2],
+        help="Number of CPU players (options: 1, 2)",
+    )
+    parser.add_argument(
+        "--player",
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help="Choose which player to play as: red = 0, yellow = 1",
+    )
+    parser.add_argument(
+        "--record",
+        action="store_true",
+        help="Flag to save a recording of the game (game.gif)",
+    )
+    parser.add_argument(
+        "--depth",
+        type=int,
+        default=2,
+        choices=[1, 2, 3],
+        help="Search depth for greedy agent. Options: 1,2,3",
+    )
     parser.add_argument(
         "--win-rate",
         type=float,
@@ -120,7 +145,9 @@ def watch() -> None:
 
     collector = ManualPolicyCollector(policy, env)
 
-    pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
+    pettingzoo_env = env.workers[
+        0
+    ].env.env  # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
     if args.record:
         recorder = GIFRecorder()
     else:
@@ -134,35 +161,50 @@ def watch() -> None:
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{type(policy.policies[agents[0]]).__name__}]")
-            print(f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1]]).__name__}]")
+            print(
+                f"Final reward: {rews[:, 0].mean()}, length: {lens.mean()} [{type(policy.policies[agents[0]]).__name__}]"
+            )
+            print(
+                f"Final reward: {rews[:, 1].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1]]).__name__}]"
+            )
             if recorder is not None:
                 recorder.end_recording(pettingzoo_env.unwrapped.screen)
                 recorder = None
+
 
 # ======== allows the user to input moves and play vs a greedy agent ======
 def play() -> None:
     env = DummyVectorEnv([lambda: get_env(render_mode=args.render_mode, args=args)])
 
     policy, agents = get_agents()
-    collector = ManualPolicyCollector(policy, env, exploration_noise=True) # Collector for CPU actions
+    collector = ManualPolicyCollector(
+        policy, env, exploration_noise=True
+    )  # Collector for CPU actions
 
-    pettingzoo_env = env.workers[0].env.env # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
+    pettingzoo_env = env.workers[
+        0
+    ].env.env  # DummyVectorEnv -> Tianshou PettingZoo Wrapper -> PettingZoo Env
     if args.record:
         recorder = GIFRecorder()
     else:
         recorder = None
-    manual_policy = gobblet_v1.ManualPolicy(env=pettingzoo_env, agent_id=args.player, recorder=recorder) # Gobblet keyboard input requires access to raw_env (uses functions from board)
+    manual_policy = gobblet_v1.ManualGobbletPolicy(
+        env=pettingzoo_env, agent_id=args.player, recorder=recorder
+    )  # Gobblet keyboard input requires access to raw_env (uses functions from board)
 
     while pettingzoo_env.agents:
         agent_id = collector.data.obs.agent_id
         # If it is the players turn and there are less than 2 CPU players (at least one human player)
         if agent_id == pettingzoo_env.agents[args.player]:
-            observation = {"observation": collector.data.obs.obs.flatten(),
-                            "action_mask": collector.data.obs.mask.flatten()} # PettingZoo expects a dict with this format
+            observation = {
+                "observation": collector.data.obs.obs.flatten(),
+                "action_mask": collector.data.obs.mask.flatten(),
+            }  # PettingZoo expects a dict with this format
             action = manual_policy(observation, agent_id)
 
-            result = collector.collect_result(action=action.reshape(1), render=args.render)
+            result = collector.collect_result(
+                action=action.reshape(1), render=args.render
+            )
         else:
             result = collector.collect(n_step=1, render=args.render)
             if recorder is not None:
@@ -170,10 +212,15 @@ def play() -> None:
 
         if collector.data.terminated or collector.data.truncated:
             rews, lens = result["rews"], result["lens"]
-            print(f"\nFinal reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]")
-            print(f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1-args.player]]).__name__}]")
+            print(
+                f"\nFinal reward: {rews[:, args.player].mean()}, length: {lens.mean()} [Human]"
+            )
+            print(
+                f"Final reward: {rews[:, 1-args.player].mean()}, length: {lens.mean()} [{type(policy.policies[agents[1-args.player]]).__name__}]"
+            )
             if recorder is not None:
                 recorder.end_recording(pettingzoo_env.unwrapped.screen)
+
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!

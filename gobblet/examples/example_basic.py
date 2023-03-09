@@ -1,14 +1,19 @@
-from gobblet import gobblet_v1
 import argparse
-import numpy as np
 import time
+
+import numpy as np
+
+from gobblet import gobblet_v1
 
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--render_mode", type=str, default="human", choices=["human", "rgb_array", "text", "text_full"],
-                        help="Choose the rendering mode for the game."
+        "--render_mode",
+        type=str,
+        default="human",
+        choices=["human", "rgb_array", "text", "text_full"],
+        help="Choose the rendering mode for the game.",
     )
 
     parser.add_argument(
@@ -23,9 +28,11 @@ def get_parser() -> argparse.ArgumentParser:
 
     return parser
 
+
 def get_args() -> argparse.Namespace:
     parser = get_parser()
     return parser.parse_known_args()[0]
+
 
 if __name__ == "__main__":
     # train the agent and watch its performance in a match!
@@ -41,7 +48,6 @@ if __name__ == "__main__":
     env.render()  # need to render the environment before pygame can take user input
 
     for agent in env.agent_iter():
-
         observation, reward, termination, truncation, info = env.last()
 
         if termination or truncation:
@@ -49,10 +55,14 @@ if __name__ == "__main__":
             env.step(None)
 
         else:
-            action_mask = observation['action_mask']
-            action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
+            action_mask = observation["action_mask"]
+            action = np.random.choice(
+                np.arange(len(action_mask)), p=action_mask / np.sum(action_mask)
+            )
 
             if args.render_mode == "human":
-                time.sleep(.5) # Wait .5 seconds between moves so the user can follow the sequence of moves
+                time.sleep(
+                    0.5
+                )  # Wait .5 seconds between moves so the user can follow the sequence of moves
 
             env.step(action)

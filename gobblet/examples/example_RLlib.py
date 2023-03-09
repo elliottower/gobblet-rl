@@ -1,7 +1,6 @@
 import glob
 import os
 from typing import Tuple
-from gymnasium import spaces
 
 import ray.tune
 from ray import init
@@ -13,8 +12,8 @@ from ray.tune.logger import pretty_print
 from ray.tune.registry import register_env
 
 from gobblet import gobblet_v1
-from gobblet.models.action_mask_model import TorchActionMaskModel
 from gobblet.game.utils import get_project_root
+from gobblet.models.action_mask_model import TorchActionMaskModel
 
 torch, nn = try_import_torch()
 
@@ -32,11 +31,6 @@ def prepare_train() -> Tuple[ppo.PPOTrainer, PettingZooEnv]:
     # wrap the pettingzoo env in MultiAgent RLLib
     env = PettingZooEnv(env_creator())
 
-    # Convert obs space and action space to gym
-    # observation_space = env.observation_space["observation"]
-    # observation_space = spaces.Box(observation_space.low, observation_space.high, observation_space.shape, observation_space.dtype)
-    # action_space = spaces.Discrete(env.action_space.n)
-
     agents = ["player_1", "player_2"]
     custom_config = {
         "env": env_name,
@@ -47,7 +41,7 @@ def prepare_train() -> Tuple[ppo.PPOTrainer, PettingZooEnv]:
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         # "num_gpus": int(torch.cuda.device_count()),
         "num_gpus": 0,
-        "num_workers": 2, #os.cpu_count() - 1,
+        "num_workers": 2,  # os.cpu_count() - 1,
         "multiagent": {
             "policies": {
                 name: (None, env.observation_space, env.action_space, {})
@@ -97,13 +91,17 @@ def train_ray(ppo_config, timesteps_total: int = 10):
 
 
 def load_ray(path, ppo_config):
-    """
+    """Load ray.
+
     Load a trained RLlib agent from the specified path.
     Call this before testing a trained agent.
-    :param path:
-        Path pointing to the agent's saved checkpoint (only used for RLlib agents)
-    :param ppo_config:
-        dict config
+
+    Args:
+        path: Path pointing to the agent's saved checkpoint (only used for RLlib agents)
+        ppo_config: dict config
+
+    Returns:
+        trainer: RLlib trainer object
     """
     trainer = ppo.PPOTrainer(config=ppo_config)
     trainer.restore(path)
@@ -145,7 +143,7 @@ def sample_trainer(trainer, env):
 
 
 def tune_training_loop(timesteps_total=10000):
-    """train trainer and sample"""
+    """Train trainer and sample."""
     trainer, env, ppo_config = prepare_train()
 
     # train trainer
@@ -162,8 +160,7 @@ def tune_training_loop(timesteps_total=10000):
 
 
 def manual_training_loop(timesteps_total=10000):
-    """train trainer and sample"""
-
+    """Train trainer and sample."""
     trainer, env, ppo_config = prepare_train()
     trainer_trained = train(trainer, max_steps=timesteps_total)
 

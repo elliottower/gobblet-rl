@@ -1,8 +1,10 @@
+import numpy as np
 import pettingzoo
 import pettingzoo.test
 import pytest
-import numpy as np
+
 from gobblet import gobblet_v1
+
 
 # Note: raw_env is required in order to test the board state, as env() only allows observations
 @pytest.fixture(scope="function")
@@ -21,9 +23,7 @@ def test_reset(env):
 def test_reset_starting(env):
     "Verify that reset() sets the board state to the correct starting position"
 
-    assert (
-        (env.board.squares == np.zeros(27)).all()
-    )
+    assert (env.board.squares == np.zeros(27)).all()
 
 
 def test_api(env):

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Board:
     def __init__(self, squares=None):
         # internally self.board.squares holds a representation of the gobblet board, consisting of three stacked 3x3 boards, one for each piece size.
@@ -26,8 +27,6 @@ class Board:
         #   [0, 0, 0],
         #   [0, 0, 6]
 
-
-
         # empty -- 0
         # player 0 -- 1
         # player 1 -- -1 # Default: 2
@@ -41,7 +40,7 @@ class Board:
         self.calculate_winners()
 
     def get_action_from_pos_piece(self, pos, piece):
-        if pos in range(9) and piece in range(1,7):
+        if pos in range(9) and piece in range(1, 7):
             return 9 * (piece - 1) + pos
         else:
             return -1
@@ -76,29 +75,30 @@ class Board:
     # Returns the index on the board [0-26] for a given action
     def get_index_from_action(self, action):
         pos = self.get_pos_from_action(action)  # [0-8]
-        piece_size = self.get_piece_size_from_action(action) # [1-3]
-        return pos + 9 * (piece_size - 1) # [0-26]
-
+        piece_size = self.get_piece_size_from_action(action)  # [1-3]
+        return pos + 9 * (piece_size - 1)  # [0-26]
 
     # Return true if an action is legal, false otherwise.
     def is_legal(self, action, agent_index=0):
-        pos = self.get_pos_from_action(action) # [0-8]
-        piece = self.get_piece_from_action(action) # [1-6]
-        piece_size = self.get_piece_size_from_action(action) # [1-3]
+        pos = self.get_pos_from_action(action)  # [0-8]
+        piece = self.get_piece_from_action(action)  # [1-6]
+        piece_size = self.get_piece_size_from_action(action)  # [1-3]
         agent_multiplier = 1 if agent_index == 0 else -1
 
         board = self.squares.reshape(3, 9)
         # Check if this piece has been placed (if the piece number occurs anywhere on the level of that piece size)
-        if any(board[piece_size-1] == piece * agent_multiplier):
-            current_loc = np.where(board[piece_size-1] == piece * agent_multiplier)[0] # Returns array of values where piece is placed
+        if any(board[piece_size - 1] == piece * agent_multiplier):
+            current_loc = np.where(board[piece_size - 1] == piece * agent_multiplier)[
+                0
+            ]  # Returns array of values where piece is placed
             if len(current_loc) > 1:
                 raise Exception("PIECE HAS BEEN USED TWICE")
-                return False # Piece has been used twice (not valid)
+                return False  # Piece has been used twice (not valid)
             else:
-                current_loc = current_loc[0] # Current location [0-27]
+                current_loc = current_loc[0]  # Current location [0-27]
             # If this piece is currently covered, moving it is not a legal action
 
-            if self.check_covered().reshape(3,9)[piece_size - 1][current_loc] == 1:
+            if self.check_covered().reshape(3, 9)[piece_size - 1][current_loc] == 1:
                 return False
 
         # If this piece has not been placed
@@ -107,8 +107,8 @@ class Board:
         if flatboard[pos] == 0:
             return True
         else:
-            existing_piece_number = flatboard[pos] # [1-6]
-            existing_piece_size = (abs(existing_piece_number) + 1) // 2 # [1-3]
+            existing_piece_number = flatboard[pos]  # [1-6]
+            existing_piece_size = (abs(existing_piece_number) + 1) // 2  # [1-3]
             if piece_size > existing_piece_size:
                 return True
             else:
@@ -153,20 +153,27 @@ class Board:
         self.winning_combinations = winning_combinations
 
     def print(self):
-        print(self.get_flatboard().reshape(3,3).transpose())
+        print(self.get_flatboard().reshape(3, 3).transpose())
 
     # returns flattened board consisting of only top pieces (excluding pieces which are gobbled by other pieces)
     def get_flatboard(self):
         flatboard = np.zeros(9)
         board = self.squares.reshape(3, 9)
-        for i in range(9):  # For every square in the 3x3 grid, find the topmost element (largest piece)
-            top_piece_size = (np.amax(
-                abs(board[:, i])))  # [-3, 2, 0] denotes a large piece gobbling a medium piece, this will return 3
+        for i in range(
+            9
+        ):  # For every square in the 3x3 grid, find the topmost element (largest piece)
+            top_piece_size = np.amax(
+                abs(board[:, i])
+            )  # [-3, 2, 0] denotes a large piece gobbling a medium piece, this will return 3
             top_piece_index = list(abs(board[:, i])).index(
-                top_piece_size)  # Get the row of the top piece (have to index [0]
-            top_piece_color = np.sign(board[
-                                          top_piece_index, i])  # Get the color of the top piece: 1 for player_1 and -1 for player_2, 0 for neither
-            flatboard[i] = top_piece_color * top_piece_size # Simplify the board into only the top elements
+                top_piece_size
+            )  # Get the row of the top piece (have to index [0]
+            top_piece_color = np.sign(
+                board[top_piece_index, i]
+            )  # Get the color of the top piece: 1 for player_1 and -1 for player_2, 0 for neither
+            flatboard[i] = (
+                top_piece_color * top_piece_size
+            )  # Simplify the board into only the top elements
         return flatboard
 
     # returns:
@@ -193,26 +200,38 @@ class Board:
         else:
             return False
 
-    def check_covered(self): # Return a 27 length array indicating which positions have a piece which is covered
+    def check_covered(
+        self,
+    ):  # Return a 27 length array indicating which positions have a piece which is covered
         board = self.squares.reshape(3, 9)
         covered = np.zeros((3, 9))
-        for i in range(9): # Check small pieces
-            if board[0, i] != 0 and (board[1, i] != 0 or board[2, i] != 0): # If there is a small piece, and either a large or medium piece covering it
+        for i in range(9):  # Check small pieces
+            if board[0, i] != 0 and (
+                board[1, i] != 0 or board[2, i] != 0
+            ):  # If there is a small piece, and either a large or medium piece covering it
                 covered[0, i] = 1
-        for i in range(9): # Check medium pieces
-            if board[1, i] != 0 and board[2, i] != 0: # If there is a meidum piece and a large piece covering it
+        for i in range(9):  # Check medium pieces
+            if (
+                board[1, i] != 0 and board[2, i] != 0
+            ):  # If there is a meidum piece and a large piece covering it
                 covered[1, i] = 1
-        covered[2, :] = 0 # Large pieces can't be covered
+        covered[2, :] = 0  # Large pieces can't be covered
         # Doesn't matter about what color is covering it, you can't move that piece this turn (allows self-gobbling)
         return covered.flatten()
 
-# DEBUG
+    # DEBUG
     def print_pieces(self):
         open_indices = [i for i in range(len(self.squares)) if self.squares[i] == 0]
         open_squares = [np.where(self.get_flatboard() == 0)[0]]
-        occupied_squares = [i % 9 for i in range(len(self.squares)) if self.squares[i] != 0] # List with entries 0-9
-        movable_squares = [i % 9 for i in occupied_squares if self.check_covered()[i] == 0] # List with entries 0-9
-        covered_squares = [i % 9 for i in np.where(self.check_covered() == 1)[0] ] # List with entries 0-9
+        occupied_squares = [
+            i % 9 for i in range(len(self.squares)) if self.squares[i] != 0
+        ]  # List with entries 0-9
+        movable_squares = [
+            i % 9 for i in occupied_squares if self.check_covered()[i] == 0
+        ]  # List with entries 0-9
+        covered_squares = [
+            i % 9 for i in np.where(self.check_covered() == 1)[0]
+        ]  # List with entries 0-9
         print("open_indices: ", open_indices)
         print("open_squares: ", open_squares)
         print("squares with pieces: ", occupied_squares)
@@ -220,4 +239,4 @@ class Board:
         print("squares with covered pieces: ", covered_squares)
 
     def __str__(self):
-        return str(self.squares.reshape(3,3,3))
+        return str(self.squares.reshape(3, 3, 3))

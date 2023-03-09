@@ -1,18 +1,32 @@
-import pygame
-from gobblet.game.utils import GIFRecorder
-import numpy as np
 import argparse
+
+import numpy as np
+import pygame
+
+from gobblet.game.utils import GIFRecorder
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--seed", type=int, default=None, help="Set random seed manually (will only affect CPU agents)"
+        "--seed",
+        type=int,
+        default=None,
+        help="Set random seed manually (will only affect CPU agents)",
     )
     parser.add_argument(
-        "--cpu-players", type=int, default=1, choices=[0, 1, 2], help="Number of CPU players (options: 0, 1, 2)"
+        "--cpu-players",
+        type=int,
+        default=1,
+        choices=[0, 1, 2],
+        help="Number of CPU players (options: 0, 1, 2)",
     )
     parser.add_argument(
-        "--player", type=int, default=0, choices=[0,1], help="Choose which player to play as: red = 0, yellow = 1"
+        "--player",
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help="Choose which player to play as: red = 0, yellow = 1",
     )
     parser.add_argument(
         "--screen-width", type=int, default=640, help="Width of pygame screen in pixels"
@@ -20,9 +34,11 @@ def get_parser() -> argparse.ArgumentParser:
 
     return parser
 
+
 def get_args() -> argparse.Namespace:
     parser = get_parser()
     return parser.parse_known_args()[0]
+
 
 if __name__ == "__main__":
     from gobblet import gobblet_v1
@@ -44,7 +60,7 @@ if __name__ == "__main__":
     # Record the first frame (empty board)
     recorder.capture_frame(env.unwrapped.screen)
 
-    manual_policy = gobblet_v1.ManualPolicy(env, recorder=recorder)
+    manual_policy = gobblet_v1.ManualGobbletPolicy(env, recorder=recorder)
 
     for agent in env.agent_iter():
         clock.tick(env.metadata["render_fps"])
@@ -60,10 +76,12 @@ if __name__ == "__main__":
             continue
 
         if agent == manual_policy.agent and args.cpu_players < 2:
-                action = manual_policy(observation, agent)
+            action = manual_policy(observation, agent)
         else:
-            action_mask = observation['action_mask']
-            action = np.random.choice(np.arange(len(action_mask)), p=action_mask / np.sum(action_mask))
+            action_mask = observation["action_mask"]
+            action = np.random.choice(
+                np.arange(len(action_mask)), p=action_mask / np.sum(action_mask)
+            )
 
         env.step(action)
 

@@ -93,15 +93,16 @@ If the game ends in a draw, both players will receive a reward of 0.
 
 """
 
-import gymnasium
-import numpy as np
-from gymnasium import spaces
-import pygame
 import os
 
+import gymnasium
+import numpy as np
+import pygame
+from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
+
 from .board import Board
 from .utils import get_image, load_chip, load_chip_preview
 
@@ -115,7 +116,9 @@ def env(render_mode=None, args=None):
     env = wrappers.OrderEnforcingWrapper(env)
     return env
 
+
 parallel_env = parallel_wrapper_fn(env)
+
 
 class raw_env(AECEnv):
     metadata = {
@@ -129,7 +132,7 @@ class raw_env(AECEnv):
     def __init__(self, render_mode=None, args=None):
         super().__init__()
         self.board = Board()
-        self.board_size = 3 # Will need to make a separate file for 4x4
+        self.board_size = 3  # Will need to make a separate file for 4x4
 
         self.agents = ["player_1", "player_2"]
         self.possible_agents = self.agents[:]
@@ -141,7 +144,9 @@ class raw_env(AECEnv):
                     "observation": spaces.Box(
                         low=0, high=1, shape=(3, 3, 13), dtype=np.int8
                     ),
-                    "action_mask": spaces.Box(low=0, high=1, shape=(54,), dtype=np.int8),
+                    "action_mask": spaces.Box(
+                        low=0, high=1, shape=(54,), dtype=np.int8
+                    ),
                 }
             )
             for i in self.agents
@@ -175,22 +180,30 @@ class raw_env(AECEnv):
         board = self.board.squares.reshape(3, 3, 3)
 
         if self.agents.index(agent) == 1:
-            board = board * -1 # Swap the signs on the board for the two different agents
+            board = (
+                board * -1
+            )  # Swap the signs on the board for the two different agents
 
         # Represent observations in the same way as pettingzoo.chess: specific channel for each color piece (e.g., two for each white small piece)
         layers = []
         for i in range(1, 7):
-            layers.append(board[(i - 1) // 2] == i) # 3x3 array with an entry of 1 for squares with each white piece (1, ..., 6)
+            layers.append(
+                board[(i - 1) // 2] == i
+            )  # 3x3 array with an entry of 1 for squares with each white piece (1, ..., 6)
 
         for i in range(1, 7):
-            layers.append(board[(i - 1) // 2] == -i)  # 3x3 array with an entry of 1 for squares with each black piece (-1, ..., -6)
+            layers.append(
+                board[(i - 1) // 2] == -i
+            )  # 3x3 array with an entry of 1 for squares with each black piece (-1, ..., -6)
 
         if self.agents.index(agent) == 1:
             agents_layer = np.ones((3, 3))
         else:
             agents_layer = np.zeros((3, 3))
 
-        layers.append(agents_layer) # Thirteenth layer encoding the current player (agent index 0 or 1)
+        layers.append(
+            agents_layer
+        )  # Thirteenth layer encoding the current player (agent index 0 or 1)
 
         observation = np.stack(layers, axis=2).astype(np.int8)
         legal_moves = self._legal_moves() if agent == self.agent_selection else []
@@ -234,7 +247,7 @@ class raw_env(AECEnv):
 
         if self.board.check_game_over():
             winner = self.board.check_for_winner()
-            if winner == 0: # NOTE: don't think ties are possible in gobblet
+            if winner == 0:  # NOTE: don't think ties are possible in gobblet
                 # tie
                 pass
             elif winner == 1:
@@ -258,7 +271,6 @@ class raw_env(AECEnv):
         self.action = action
         if self.render_mode in ["human", "text", "text_full", "rgb_array"]:
             self.render()
-
 
     def reset(self, seed=None, return_info=False, options=None):
         # reset environment
@@ -288,17 +300,17 @@ class raw_env(AECEnv):
             if input == 0:
                 return "- "
             if input > 0:
-                return "+{}".format(int(input))
+                return f"+{int(input)}"
             else:
-                return "{}".format(int(input))
+                return f"{int(input)}"
 
         def getSymbol(input):
             if input == 0:
                 return "- "
             if input > 0:
-                return "+{}".format(int((input + 1) // 2))
+                return f"+{int((input + 1) // 2)}"
             else:
-                return "{}".format(int((input) // 2))
+                return f"{int((input) // 2)}"
 
         if self.debug:
             self.board.print_pieces()
@@ -306,48 +318,111 @@ class raw_env(AECEnv):
             pos = self.action % 9
             piece = (self.action // 9) + 1
             piece = (piece + 1) // 2
-            print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
+            print(
+                f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}"
+            )
             board = list(map(getSymbol, self.board.get_flatboard()))
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
-            print(f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  ")
+            print(
+                f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  "
+            )
             print("_" * 7 + "|" + "_" * 7 + "|" + "_" * 7)
 
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
-            print(f"  {board[1]}   " + "|" + f"   {board[4]}  " + "|" + f"   {board[7]}  ")
+            print(
+                f"  {board[1]}   " + "|" + f"   {board[4]}  " + "|" + f"   {board[7]}  "
+            )
             print("_" * 7 + "|" + "_" * 7 + "|" + "_" * 7)
 
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
-            print(f"  {board[2]}   " + "|" + f"   {board[5]}  " + "|" + f"   {board[8]}  ")
+            print(
+                f"  {board[2]}   " + "|" + f"   {board[5]}  " + "|" + f"   {board[8]}  "
+            )
             print(" " * 7 + "|" + " " * 7 + "|" + " " * 7)
             print()
 
         elif self.render_mode == "text_full":
             pos = self.action % 9
             piece = (self.action // 9) + 1
-            print(f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}")
+            print(
+                f"TURN: {self.turn}, AGENT: {self.agent_selection}, ACTION: {self.action}, POSITION: {pos}, PIECE: {piece}"
+            )
             board = list(map(getSymbolFull, self.board.squares))
-            print(" " * 9 + "SMALL" + " " * 9 + "  " +
-                  " " * 10 + "MED" + " " * 10 + "  " +
-                  " " * 9 + "LARGE" + " " * 9 + "  ")
-            top= " " * 7 + "|" + " " * 7 + "|" + " " * 7
+            print(
+                " " * 9
+                + "SMALL"
+                + " " * 9
+                + "  "
+                + " " * 10
+                + "MED"
+                + " " * 10
+                + "  "
+                + " " * 9
+                + "LARGE"
+                + " " * 9
+                + "  "
+            )
+            top = " " * 7 + "|" + " " * 7 + "|" + " " * 7
             bottom = "_" * 7 + "|" + "_" * 7 + "|" + "_" * 7
-            top1= f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  "
-            top2 = f"  {board[9]}   " + "|" + f"   {board[12]}  " + "|" + f"   {board[15]}  "
-            top3 = f"  {board[18]}   " + "|" + f"   {board[21]}  " + "|" + f"   {board[24]}  "
+            top1 = (
+                f"  {board[0]}   " + "|" + f"   {board[3]}  " + "|" + f"   {board[6]}  "
+            )
+            top2 = (
+                f"  {board[9]}   "
+                + "|"
+                + f"   {board[12]}  "
+                + "|"
+                + f"   {board[15]}  "
+            )
+            top3 = (
+                f"  {board[18]}   "
+                + "|"
+                + f"   {board[21]}  "
+                + "|"
+                + f"   {board[24]}  "
+            )
             print(top + "  " + top + "  " + top)
             print(top1 + "  " + top2 + "  " + top3)
             print(bottom + "  " + bottom + "  " + bottom)
 
-            mid1 = f"  {board[1]}   " + "|" + f"   {board[4]}  " + "|" + f"   {board[7]}  "
-            mid2 = f"  {board[10]}   " + "|" + f"   {board[13]}  " + "|" + f"   {board[16]}  "
-            mid3 = f"  {board[19]}   " + "|" + f"   {board[22]}  " + "|" + f"   {board[25]}  "
+            mid1 = (
+                f"  {board[1]}   " + "|" + f"   {board[4]}  " + "|" + f"   {board[7]}  "
+            )
+            mid2 = (
+                f"  {board[10]}   "
+                + "|"
+                + f"   {board[13]}  "
+                + "|"
+                + f"   {board[16]}  "
+            )
+            mid3 = (
+                f"  {board[19]}   "
+                + "|"
+                + f"   {board[22]}  "
+                + "|"
+                + f"   {board[25]}  "
+            )
             print(top + "  " + top + "  " + top)
             print(mid1 + "  " + mid2 + "  " + mid3)
             print(bottom + "  " + bottom + "  " + bottom)
 
-            bot1 = f"  {board[2]}   " + "|" + f"   {board[5]}  " + "|" + f"   {board[8]}  "
-            bot2 = f"  {board[9+2]}   " + "|" + f"   {board[9+5]}  " + "|" + f"   {board[9+8]}  "
-            bot3 = f"  {board[18+2]}   " + "|" + f"   {board[18+5]}  " + "|" + f"   {board[18+8]}  "
+            bot1 = (
+                f"  {board[2]}   " + "|" + f"   {board[5]}  " + "|" + f"   {board[8]}  "
+            )
+            bot2 = (
+                f"  {board[9+2]}   "
+                + "|"
+                + f"   {board[9+5]}  "
+                + "|"
+                + f"   {board[9+8]}  "
+            )
+            bot3 = (
+                f"  {board[18+2]}   "
+                + "|"
+                + f"   {board[18+5]}  "
+                + "|"
+                + f"   {board[18+8]}  "
+            )
             print(top + "  " + top + "  " + top)
             print(bot1 + "  " + bot2 + "  " + bot3)
             print(top + "  " + top + "  " + top)
@@ -358,7 +433,9 @@ class raw_env(AECEnv):
             if self.render_mode == "human":
                 if self.screen is None:
                     pygame.init()
-                    self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+                    self.screen = pygame.display.set_mode(
+                        (self.screen_width, self.screen_height)
+                    )
                 pygame.event.get()
             elif self.screen is None:
                 self.screen = pygame.Surface((self.screen_width, self.screen_height))
@@ -381,14 +458,26 @@ class raw_env(AECEnv):
 
             self.preview = {}
             self.preview["player_1"] = {}
-            self.preview["player_1"][3] = load_chip_preview(tile_size, "GobbletLargeRedPreview.png", scale_large)
-            self.preview["player_1"][2] = load_chip_preview(tile_size, "GobbletMedRedPreview.png", scale_med)
-            self.preview["player_1"][1] = load_chip_preview(tile_size, "GobbletSmallRedPreview.png", scale_small)
+            self.preview["player_1"][3] = load_chip_preview(
+                tile_size, "GobbletLargeRedPreview.png", scale_large
+            )
+            self.preview["player_1"][2] = load_chip_preview(
+                tile_size, "GobbletMedRedPreview.png", scale_med
+            )
+            self.preview["player_1"][1] = load_chip_preview(
+                tile_size, "GobbletSmallRedPreview.png", scale_small
+            )
 
             self.preview["player_2"] = {}
-            self.preview["player_2"][3] = load_chip_preview(tile_size, "GobbletLargeYellowPreview.png", scale_large)
-            self.preview["player_2"][2] = load_chip_preview(tile_size, "GobbletMedYellowPreview.png", scale_med)
-            self.preview["player_2"][1] = load_chip_preview(tile_size, "GobbletSmallYellowPreview.png", scale_small)
+            self.preview["player_2"][3] = load_chip_preview(
+                tile_size, "GobbletLargeYellowPreview.png", scale_large
+            )
+            self.preview["player_2"][2] = load_chip_preview(
+                tile_size, "GobbletMedYellowPreview.png", scale_med
+            )
+            self.preview["player_2"][1] = load_chip_preview(
+                tile_size, "GobbletSmallYellowPreview.png", scale_small
+            )
 
             # preview_chips = {self.agents[0]: self.preview["player_1"], self.agents[1]: self.preview["player_1"]}
 
@@ -399,34 +488,50 @@ class raw_env(AECEnv):
 
             self.screen.blit(board_img, (0, 0))
 
-            offset = (self.screen_width * ((9+4) / 47)) # Piece is 9px wide, gap between pieces 4px, total width is 47px
-            offset_side = (self.screen_width * (6 / 47)) - 1 # Distance from the side of the board to the first piece is 6px
-            offset_centering = offset * 1/3 + \
-                               (5 * self.screen_width/1000 if self.screen_width > 500 else 8 * self.screen_width/1000)
+            offset = self.screen_width * (
+                (9 + 4) / 47
+            )  # Piece is 9px wide, gap between pieces 4px, total width is 47px
+            offset_side = (
+                self.screen_width * (6 / 47)
+            ) - 1  # Distance from the side of the board to the first piece is 6px
+            offset_centering = offset * 1 / 3 + (
+                5 * self.screen_width / 1000
+                if self.screen_width > 500
+                else 8 * self.screen_width / 1000
+            )
             # Extra 5px fixed alignment issues at 1000x1000, but ratio needs to be higher for lower res (trial & error)
 
             # Blit the chips and their positions
             for i in range(9):
                 for j in range(1, 4):
-                    if self.board.squares[i + 9 * (j - 1)] == 2 * j - 1 or \
-                        self.board.squares[i + 9 * (j - 1)] == 2 * j: # small pieces (1,2), medium pieces (3,4), large pieces (5,6)
+                    if (
+                        self.board.squares[i + 9 * (j - 1)] == 2 * j - 1
+                        or self.board.squares[i + 9 * (j - 1)] == 2 * j
+                    ):  # small pieces (1,2), medium pieces (3,4), large pieces (5,6)
                         self.screen.blit(
                             red[j],
-                            red[j].get_rect(center =
-                                                (int(i / 3) * (offset) + offset_side + offset_centering,
-                                                     (i % 3) * (offset) + offset_side + offset_centering
-                                                 )
-                                            )
+                            red[j].get_rect(
+                                center=(
+                                    int(i / 3) * (offset)
+                                    + offset_side
+                                    + offset_centering,
+                                    (i % 3) * (offset) + offset_side + offset_centering,
+                                )
+                            ),
                         )
-                    if self.board.squares[i + 9 * (j - 1)] == -1 * (2  * j - 1) or\
-                        self.board.squares[i + 9 * (j - 1)] == -1 * (2 * j):
+                    if self.board.squares[i + 9 * (j - 1)] == -1 * (
+                        2 * j - 1
+                    ) or self.board.squares[i + 9 * (j - 1)] == -1 * (2 * j):
                         self.screen.blit(
                             yellow[j],
-                            yellow[j].get_rect(center =
-                                                (int(i / 3) * (offset) + offset_side + offset_centering,
-                                                     (i % 3) * (offset) + offset_side + offset_centering
-                                                 )
-                                            )
+                            yellow[j].get_rect(
+                                center=(
+                                    int(i / 3) * (offset)
+                                    + offset_side
+                                    + offset_centering,
+                                    (i % 3) * (offset) + offset_side + offset_centering,
+                                )
+                            ),
                         )
 
             # Blit the preview chips and their positions
@@ -435,20 +540,26 @@ class raw_env(AECEnv):
                     if self.board.squares_preview[i + 9 * (j - 1)] == 1:
                         self.screen.blit(
                             self.preview["player_1"][j],
-                            self.preview["player_1"][j].get_rect(center =
-                                                (int(i / 3) * (offset) + offset_side + offset_centering,
-                                                     (i % 3) * (offset) + offset_side + offset_centering
-                                                 )
-                                            )
+                            self.preview["player_1"][j].get_rect(
+                                center=(
+                                    int(i / 3) * (offset)
+                                    + offset_side
+                                    + offset_centering,
+                                    (i % 3) * (offset) + offset_side + offset_centering,
+                                )
+                            ),
                         )
                     if self.board.squares_preview[i + 9 * (j - 1)] == -1:
                         self.screen.blit(
                             self.preview["player_2"][j],
-                            self.preview["player_2"][j].get_rect(center =
-                                                (int(i / 3) * (offset) + offset_side + offset_centering,
-                                                     (i % 3) * (offset) + offset_side + offset_centering
-                                                 )
-                                            )
+                            self.preview["player_2"][j].get_rect(
+                                center=(
+                                    int(i / 3) * (offset)
+                                    + offset_side
+                                    + offset_centering,
+                                    (i % 3) * (offset) + offset_side + offset_centering,
+                                )
+                            ),
                         )
 
             pygame.display.update()

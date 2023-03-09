@@ -1,20 +1,13 @@
 # Extending tianshou collector class to work with manual policy (for user input)
 import time
-import warnings
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import gym
 import numpy as np
-import torch
-
-from tianshou.data import (
-    Batch,
-    ReplayBuffer,
-)
-from tianshou.env import BaseVectorEnv, DummyVectorEnv
-from tianshou.policy import BasePolicy
-
+from tianshou.data import Batch, ReplayBuffer
 from tianshou.data.collector import Collector
+from tianshou.env import BaseVectorEnv
+from tianshou.policy import BasePolicy
 
 
 class ManualPolicyCollector(Collector):
@@ -26,15 +19,15 @@ class ManualPolicyCollector(Collector):
         preprocess_fn: Optional[Callable[..., Batch]] = None,
         exploration_noise: bool = False,
     ) -> None:
-        super(ManualPolicyCollector, self).__init__(policy=policy, env=env, exploration_noise=exploration_noise)
+        super().__init__(policy=policy, env=env, exploration_noise=exploration_noise)
 
     # Custom function to collect the result of an inputted action
     def collect_result(
-            self,
-            action: int = None,
-            render: Optional[float] = None,
-            no_grad: bool = True,
-            gym_reset_kwargs: Optional[Dict[str, Any]] = None,
+        self,
+        action: int = None,
+        render: Optional[float] = None,
+        no_grad: bool = True,
+        gym_reset_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Collect the results of an inputted action..
 
@@ -73,7 +66,7 @@ class ManualPolicyCollector(Collector):
         while True:
             assert len(self.data) == len(ready_env_ids)
             # restore the state: if the last state is None, it won't store
-            last_state = self.data.policy.pop("hidden_state", None)
+            last_state = self.data.policy.pop("hidden_state", None)  # noqa: F841
 
             # use hard coded action (rather than using a policy or randomly sampling)
             self.data.update(act=action)
@@ -109,7 +102,7 @@ class ManualPolicyCollector(Collector):
                 terminated=terminated,
                 truncated=truncated,
                 done=done,
-                info=info
+                info=info,
             )
             if self.preprocess_fn:
                 self.data.update(
@@ -154,10 +147,9 @@ class ManualPolicyCollector(Collector):
                 # remove surplus env id from ready_env_ids
                 # to avoid bias in selecting environments
 
-
             self.data.obs = self.data.obs_next
 
-            if (n_step and step_count >= n_step):
+            if n_step and step_count >= n_step:
                 break
 
         # generate statistics
@@ -167,10 +159,7 @@ class ManualPolicyCollector(Collector):
 
         if episode_count > 0:
             rews, lens, idxs = list(
-                map(
-                    np.concatenate,
-                    [episode_rews, episode_lens, episode_start_indices]
-                )
+                map(np.concatenate, [episode_rews, episode_lens, episode_start_indices])
             )
             rew_mean, rew_std = rews.mean(), rews.std()
             len_mean, len_std = lens.mean(), lens.std()

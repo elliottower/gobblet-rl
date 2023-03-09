@@ -1,19 +1,22 @@
-from typing import Any, Dict, Optional, Union
 from copy import deepcopy
+from typing import Any, Dict, Optional, Union
+
 import numpy as np
 from numpy import ndarray
-
-from tianshou.data import Batch, ReplayBuffer, to_numpy, to_torch_as
+from tianshou.data import Batch
 from tianshou.policy import BasePolicy
 
 from gobblet.game.greedy_policy import GreedyGobbletPolicy
+
+
 class GreedyPolicy(BasePolicy):
-    """
+    """Greedy Policy.
+
     Basic greedy policy which checks if a move results in a victory, and if it sets the opponent up to win (or lose) in the next turn.
     The depth argument controls the agent's search depth (default of 2 is a balance between computational efficiency and optimal play)
      * depth = 1: Agent considers moves which it can use to directly win
      * depth = 2: Agent also considers moves it can take to block the opponent from winning next turn
-     * depth = 3: Agent also considers moves which set it up to win in two moves: no matter waht opponents does in retaliation (unblockable wins)
+     * depth = 3: Agent also considers moves which set it up to win in two moves: no matter what opponents does in retaliation (unblockable wins)
     """
 
     def __init__(
@@ -65,11 +68,15 @@ class GreedyPolicy(BasePolicy):
                 if len(batch_single[input].agent_id) > 1:
                     batch_single[input].obs = batch_single[input].obs[b, ...]
                     batch_single[input].mask = batch_single[input].mask[b, ...]
-                    batch_single[input].agent_id = batch_single[input].agent_id[b, ...].reshape(1)
+                    batch_single[input].agent_id = (
+                        batch_single[input].agent_id[b, ...].reshape(1)
+                    )
                 act = self.forward_unbatched(batch=batch_single)  # array(1)
-                acts.append(act) # [ array(1), array(2), ... array(10) ]
+                acts.append(act)  # [ array(1), array(2), ... array(10) ]
             acts = np.array(acts)
-            return Batch(act=acts)  # Batch( act: [ array(1), array(2), ... array(10) ] )
+            return Batch(
+                act=acts
+            )  # Batch( act: [ array(1), array(2), ... array(10) ] )
         else:
             batch_single = deepcopy(full_batch)
             act = self.forward_unbatched(batch=batch_single)
