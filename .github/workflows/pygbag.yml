@@ -15,6 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Checkout
       run: |
+            bash install_wasm.sh
             python -m pip install pygbag
             python -m pygbag --build $GITHUB_WORKSPACE/main.py
     - name : "Upload to GitHub pages branch gh-pages"
