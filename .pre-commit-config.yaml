@@ -1,4 +1,16 @@
 ---
+ci:
+  autofix_commit_msg: |
+      [pre-commit.ci] auto fixes from pre-commit.com hooks
+  
+      for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
+
 repos:
   - repo: https://github.com/python/black
     rev: 23.1.0
@@ -60,15 +72,3 @@ repos:
 #        pass_filenames: false
 #        types: [python]
 #        additional_dependencies: ["pyright"]
-
-ci:
-    autofix_commit_msg: |
-        [pre-commit.ci] auto fixes from pre-commit.com hooks
-
-        for more information, see https://pre-commit.ci
-    autofix_prs: true
-    autoupdate_branch: ''
-    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
-    autoupdate_schedule: weekly
-    skip: []
-    submodules: false
