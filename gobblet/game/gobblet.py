@@ -88,9 +88,7 @@ If the game ends in a draw, both players will receive a reward of 0.
 
 ### Version History
 
-* v3: Fixed bug in arbitrary calls to observe() (1.8.0)
-* v2: Legal action mask in observation replaced illegal move list in infos (1.5.0)
-* v1: Bumped version of all environments due to adoption of new agent iteration scheme where all agents are iterated over after they are done (1.4.0)
+* v1: Added pygame rendering and human interaction
 * v0: Initial versions release (1.0.0)
 
 """
@@ -106,14 +104,13 @@ from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 from .board import Board
 from .utils import get_image, load_chip, load_chip_preview
-from .manual_policy import ManualPolicy
 
 
 def env(render_mode=None, args=None):
     env = raw_env(render_mode=render_mode, args=args)
     if render_mode == "ansi":
         env = wrappers.CaptureStdoutWrapper(env)
-    # env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
+    env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
     env = wrappers.AssertOutOfBoundsWrapper(env)
     env = wrappers.OrderEnforcingWrapper(env)
     return env
@@ -142,7 +139,7 @@ class raw_env(AECEnv):
             i: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(3, 3, 12), dtype=np.int8
+                        low=0, high=1, shape=(3, 3, 13), dtype=np.int8
                     ),
                     "action_mask": spaces.Box(low=0, high=1, shape=(54,), dtype=np.int8),
                 }
@@ -174,8 +171,9 @@ class raw_env(AECEnv):
     # [[0,0,2]
     #  [1,2,1]
     #  [2,1,0]]
-    def observe(self, agent): #TODO: test this
+    def observe(self, agent):
         board = self.board.squares.reshape(3, 3, 3)
+
         if self.agents.index(agent) == 1:
             board = board * -1 # Swap the signs on the board for the two different agents
 
@@ -186,6 +184,14 @@ class raw_env(AECEnv):
 
         for i in range(1, 7):
             layers.append(board[(i - 1) // 2] == -i)  # 3x3 array with an entry of 1 for squares with each black piece (-1, ..., -6)
+
+        if self.agents.index(agent) == 1:
+            agents_layer = np.ones((3, 3))
+        else:
+            agents_layer = np.zeros((3, 3))
+
+        layers.append(agents_layer) # Thirteenth layer encoding the current player (agent index 0 or 1)
+
         observation = np.stack(layers, axis=2).astype(np.int8)
         legal_moves = self._legal_moves() if agent == self.agent_selection else []
 
@@ -384,7 +390,7 @@ class raw_env(AECEnv):
             self.preview["player_2"][2] = load_chip_preview(tile_size, "GobbletMedYellowPreview.png", scale_med)
             self.preview["player_2"][1] = load_chip_preview(tile_size, "GobbletSmallYellowPreview.png", scale_small)
 
-            preview_chips = {self.agents[0]: self.preview["player_1"], self.agents[1]: self.preview["player_1"]}
+            # preview_chips = {self.agents[0]: self.preview["player_1"], self.agents[1]: self.preview["player_1"]}
 
             board_img = get_image(os.path.join("img", "GobbletBoard3x3.png"))
             board_img = pygame.transform.scale(

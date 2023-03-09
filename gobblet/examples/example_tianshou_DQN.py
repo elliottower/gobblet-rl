@@ -32,7 +32,7 @@ from torch.utils.tensorboard import SummaryWriter
 from gobblet import gobblet_v1
 from gobblet.game.collector_manual_policy import ManualPolicyCollector
 from gobblet.game.utils import GIFRecorder
-from gobblet.game.greedy_policy import GreedyPolicy
+from gobblet.game.greedy_policy_tianshou import GreedyPolicy
 import time
 
 

@@ -1,6 +1,7 @@
 import glob
 import os
 from typing import Tuple
+from gymnasium import spaces
 
 import ray.tune
 from ray import init
@@ -23,13 +24,19 @@ def prepare_train() -> Tuple[ppo.PPOTrainer, PettingZooEnv]:
 
     # get the Pettingzoo env
     def env_creator():
-        env = env = gobblet_v1.env(render_mode=None, debug=False)
+        env = gobblet_v1.env(render_mode=None)
         return env
 
     register_env(env_name, lambda config: PettingZooEnv(env_creator()))
     ModelCatalog.register_custom_model("pa_model2", TorchActionMaskModel)
     # wrap the pettingzoo env in MultiAgent RLLib
     env = PettingZooEnv(env_creator())
+
+    # Convert obs space and action space to gym
+    # observation_space = env.observation_space["observation"]
+    # observation_space = spaces.Box(observation_space.low, observation_space.high, observation_space.shape, observation_space.dtype)
+    # action_space = spaces.Discrete(env.action_space.n)
+
     agents = ["player_1", "player_2"]
     custom_config = {
         "env": env_name,
@@ -38,8 +45,9 @@ def prepare_train() -> Tuple[ppo.PPOTrainer, PettingZooEnv]:
         },
         "framework": "torch",
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        "num_gpus": int(torch.cuda.device_count()),
-        "num_workers": 1, #os.cpu_count() - 1,
+        # "num_gpus": int(torch.cuda.device_count()),
+        "num_gpus": 0,
+        "num_workers": 2, #os.cpu_count() - 1,
         "multiagent": {
             "policies": {
                 name: (None, env.observation_space, env.action_space, {})

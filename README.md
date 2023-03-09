@@ -8,9 +8,9 @@ Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](htt
 Allows for users to play in the same environment, and even play against RL agents trained with [Tianshou](https://github.com/thu-ml/tianshou).
 
 <h1 style="text-align: center;width: 80%">
-    <img alt="Gobblet board game" src="./gobblet.jpg" width="45%">
+    <img alt="Gobblet board game" src="./assets/gobblet.jpg" width="45%">
     &nbsp; &nbsp; &nbsp; &nbsp;
-    <img alt="Gobblet-rl game rendered with Pygame" src="./gobblet_pygame.gif" width="45%">
+    <img alt="Gobblet-rl game rendered with Pygame" src="./asets/gobblet_pygame.gif" width="45%">
 
 </h1>
  
@@ -118,7 +118,7 @@ The default game mode is human vs CPU, with the human playing as red and CPU as 
 
 ``--render_mode="human" `` will render the game board visually using pygame. Player 1 plays red and goes first, while player 2 plays yellow. 
 
-<img alt="Example using render_mode='human'" src="https://raw.githubusercontent.com/elliottower/gobblet-rl/main/gobblet_pygame.png" width=30% height=30%>
+<img alt="Example using render_mode='human'" src="./assets/gobblet_pygame.png" width=30% height=30%>
 
 When playing interactively, possible moves can be previewed by hovering the mouse over each square. To move a piece which is already placed, simply click on it.
 
