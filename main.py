@@ -5,12 +5,13 @@ import time
 sys.path.append("modules")
 
 import numpy as np  # noqa: E402 F401
-from gobblet import gobblet_v1  # noqa: E402
 
+from gobblet import gobblet_v1  # noqa: E402
 
 PLAYER = 0
 DEPTH = 2
 RENDER_MODE = "human"
+
 
 async def main() -> None:
     env = gobblet_v1.env(render_mode="human", args=None)
@@ -38,7 +39,9 @@ async def main() -> None:
             time.sleep(1)
 
         else:
-            action = greedy_policy.compute_action(observation["observation"], observation["action_mask"])
+            action = greedy_policy.compute_action(
+                observation["observation"], observation["action_mask"]
+            )
             # Wait 1 second between moves so the user can follow the sequence of moves
             time.sleep(1)
 

@@ -1,11 +1,11 @@
-import gymnasium.core
-from ray.rllib.env import ParallelPettingZooEnv
-from ray.rllib.agents import ppo
-from ray.rllib.policy.policy import PolicySpec
-from ray.tune import register_env
 import gymnasium
+import gymnasium.core
 import numpy as np
 from pettingzoo.utils import wrappers
+from ray.rllib.agents import ppo
+from ray.rllib.env import ParallelPettingZooEnv
+from ray.rllib.policy.policy import PolicySpec
+from ray.tune import register_env
 
 from gobblet import gobblet_v1
 
@@ -44,6 +44,7 @@ from gobblet import gobblet_v1
 #             observation = observation.reshape(9, 12)
 #         return observation
 
+
 class FlattenedEnv(wrappers.base.BaseWrapper):
     def __init__(self, env):
         # # Number of actions for each agent (for redefining action space method below)
@@ -52,31 +53,43 @@ class FlattenedEnv(wrappers.base.BaseWrapper):
 
         # Flatten observation (RLlib will change model type from fully connected to CNN for obs space with 3+ dims)
         for p in env.possible_agents:
-            old = self.observation_space(p)['observation']
+            old = self.observation_space(p)["observation"]
             new_shape = np.prod(old.shape).reshape(1)
-            self.observation_space(p)['observation'] = gymnasium.spaces.Box(low=old.low.reshape(new_shape), high=old.high.reshape(new_shape), shape=new_shape, dtype=old.dtype)
+            self.observation_space(p)["observation"] = gymnasium.spaces.Box(
+                low=old.low.reshape(new_shape),
+                high=old.high.reshape(new_shape),
+                shape=new_shape,
+                dtype=old.dtype,
+            )
 
     def observe(self, agent):
         observation = self.env.observe(agent)
-        print("observation: " , observation)
+        print("observation: ", observation)
 
-        new_shape = self.observation_space(self.env.possible_agents[0])["observation"].shape
+        new_shape = self.observation_space(self.env.possible_agents[0])[
+            "observation"
+        ].shape
         # print(new_shape)
         # If the observation consists of a dict with keys ['player_1', 'player_2'] (expected for parallel env)
 
         if isinstance(observation, dict):
             if self.env.agents == list(observation.keys()):
                 for key in observation.keys():
-                    observation[key]["observation"] = observation[key]["observation"].reshape(new_shape)
+                    observation[key]["observation"] = observation[key][
+                        "observation"
+                    ].reshape(new_shape)
             elif "observation" in observation.keys():
-                observation["observation"] = observation["observation"].reshape(new_shape)
+                observation["observation"] = observation["observation"].reshape(
+                    new_shape
+                )
         else:
             observation = observation.reshape(new_shape)
-        print("flattened observation: " , observation)
+        print("flattened observation: ", observation)
         return observation
 
     def __str__(self):
         return str(self.env)
+
 
 def env_creator(args):
     env = gobblet_v1.parallel_env()
@@ -112,10 +125,12 @@ if __name__ == "__main__":
             "policies": {
                 name: (
                     PolicySpec(
-                    policy_class=None,  # infer automatically from Algorithm
-                    observation_space=test_env.observation_space,  # infer automatically from env
-                    action_space=test_env.action_space,  # infer automatically from env
-                    config={"gamma": 0.85},  # use main config plus <- this override here
+                        policy_class=None,  # infer automatically from Algorithm
+                        observation_space=test_env.observation_space,  # infer automatically from env
+                        action_space=test_env.action_space,  # infer automatically from env
+                        config={
+                            "gamma": 0.85
+                        },  # use main config plus <- this override here
                     )
                 )
                 for name in agents

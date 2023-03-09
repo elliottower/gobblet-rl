@@ -20,29 +20,24 @@ be played by the user against the "main" agent on the command line.
 """
 
 import argparse
-
-import numpy as np
 import os
-
-from ray.rllib.examples.models.action_mask_model import ActionMaskModel, TorchActionMaskModel
-
-from gobblet import gobblet_v1
 import sys
 
+import gymnasium
+import numpy as np
 import ray
+import supersuit as ss
 from ray import air, tune
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.examples.policy.random_policy import RandomPolicy
-from gobblet.game.random_admissible_policy_rllib import RandomAdmissiblePolicy
-from gobblet.game.greedy_policy_rllib import GreedyPolicy
-
 from ray.rllib.env.wrappers.pettingzoo_env import PettingZooEnv
+from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import CLIReporter, register_env
 
-import gymnasium
-import supersuit as ss
+from gobblet import gobblet_v1
+from gobblet.game.greedy_policy_rllib import GreedyPolicy
+from gobblet.game.random_admissible_policy_rllib import RandomAdmissiblePolicy
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -101,7 +96,6 @@ parser.add_argument(
 parser.add_argument(
     "--no-masking",
     action="store_true",
-
 )
 args = parser.parse_args()
 
@@ -118,7 +112,7 @@ def ask_user_for_action(observation):
     legal_moves = action_mask.nonzero()[0]
     choice = -1
     while choice not in legal_moves:
-        print("Choose an action from {}:".format(legal_moves))
+        print(f"Choose an action from {legal_moves}:")
         sys.stdout.flush()
         choice_str = input()
         try:
@@ -199,7 +193,11 @@ class SelfPlayCallback(DefaultCallbacks):
 if __name__ == "__main__":
     ray.init(num_cpus=args.num_cpus or None, include_dashboard=False, local_mode=True)
 
-    OPPONENT_POLICIES = {"random": RandomPolicy, "random_admissible": RandomAdmissiblePolicy, "greedy": GreedyPolicy}
+    OPPONENT_POLICIES = {
+        "random": RandomPolicy,
+        "random_admissible": RandomAdmissiblePolicy,
+        "greedy": GreedyPolicy,
+    }
     OpponentPolicy = OPPONENT_POLICIES[args.opponent_policy]
 
     def convert_box(convert_obs_fn, old_box):
@@ -290,8 +288,8 @@ if __name__ == "__main__":
         # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
         .resources(num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", "0")))
     )
-    config.preprocessor_pref=None
-    config._disable_preprocessor_api=True
+    config.preprocessor_pref = None
+    config._disable_preprocessor_api = True
 
     stop = {
         "timesteps_total": args.stop_timesteps,
@@ -351,7 +349,9 @@ if __name__ == "__main__":
             env.reset()
             env.render()
 
-            manual_policy = gobblet_v1.ManualGobbletPolicy(env=env, agent_id=human_player) # Has to be called after env.reset as it accesses the env's agents
+            manual_policy = gobblet_v1.ManualGobbletPolicy(
+                env=env, agent_id=human_player
+            )  # Has to be called after env.reset as it accesses the env's agents
 
             for agent in env.agent_iter():
                 observation, reward, termination, truncation, info = env.last()
@@ -373,9 +373,13 @@ if __name__ == "__main__":
                 else:
                     if agent == env.possible_agents[human_player]:
                         if args.render_mode == "human":
-                            action = manual_policy(observation, agent) # Get user input from Pygame
+                            action = manual_policy(
+                                observation, agent
+                            )  # Get user input from Pygame
                         else:
-                            action = ask_user_for_action(observation) # Get user input from command line
+                            action = ask_user_for_action(
+                                observation
+                            )  # Get user input from command line
                     else:
                         action = algo.compute_single_action(
                             observation, policy_id="main"
@@ -399,7 +403,7 @@ if __name__ == "__main__":
 
             num_episodes += 1
 
-        env.render() # TODO do we need this
+        env.render()  # TODO do we need this
         algo.stop()
 
     ray.shutdown()
