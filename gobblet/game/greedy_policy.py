@@ -179,10 +179,10 @@ class GreedyGobbletPolicy:
                                 )
                             ]
                             actions_depth3 = list(legal_actions_depth3)
-                            results_depth3 = {}
+                            res_depth3 = {}
 
                             # Search over all depth 3 actions which we can do
-                            for action_depth3 in legal_actions_depth3:
+                            for act_depth3 in legal_actions_depth3:
                                 depth3_board = Board()
                                 depth3_board.squares = depth2_board.squares.copy()
                                 depth3_board.play_turn(
@@ -190,21 +190,19 @@ class GreedyGobbletPolicy:
                                 )
 
                                 # If we can win next turn, do it
-                                results_depth3[
-                                    action_depth3
-                                ] = depth3_board.check_for_winner()
+                                res_depth3[act_depth3] = depth3_board.check_for_winner()
                                 if (
-                                    results_depth3[action_depth3]
-                                    == winner_values[agent_index]
+                                    res_depth3[act_depth3] == winner_values[agent_index]
                                 ):  # Win for our agent
                                     chosen_action = action  # If we can win in depth 3, then we know this blocking action is good
                                     break
                                 elif (
-                                    results_depth3[action_depth3]
+                                    res_depth3[act_depth3]
                                     == winner_values[opponent_index]
                                 ):  # Loss for our agent
                                     if len(actions_depth3) > 1:
-                                        actions_depth3.remove(action)
+                                        if action in actions_depth3:
+                                            actions_depth3.remove(action)
                                     else:
                                         break  # If there is nothing we can do to prevent them from winning in depth3, we have to do one of the moves
 
