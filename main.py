@@ -3,15 +3,17 @@ import sys
 
 sys.path.append("modules")
 
-import numpy as np  # noqa: E402 F401
 import time  # noqa: E402
-from gobblet import gobblet_v1  # noqa: E402
 
+import numpy as np  # noqa: E402 F401
+
+from gobblet import gobblet_v1  # noqa: E402
 
 PLAYER = 0
 DEPTH = 2
 RENDER_MODE = "human"
 RENDER_DELAY = 0.1
+
 
 async def main() -> None:
     env = gobblet_v1.env(render_mode="human", args=None)
