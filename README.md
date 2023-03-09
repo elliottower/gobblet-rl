@@ -1,10 +1,10 @@
 # gobblet-rl
 
 
+[![pages-build-deployment](https://github.com/elliottower/gobblet-rl/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/elliottower/gobblet-rl/actions/workflows/pages/pages-build-deployment)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/elliottower/gobblet-rl/main.svg)](https://results.pre-commit.ci/latest/github/elliottower/gobblet-rl/main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI version](https://badge.fury.io/py/gobblet-rl.svg?branch=master&kill_cache=1)](https://badge.fury.io/py/gobblet-rl) 
-[![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/elliottower/gobblet-rl/blob/main/LICENSE)
 
 Interactive Multi-Agent Reinforcement Learning Environment for the [Gobblet](https://themindcafe.com.sg/wp-content/uploads/2018/07/Gobblet-Gobblers.pdf) board game using [PettingZoo](https://github.com/PettingZoo-Team/PettingZoo) and [Pygame](https://github.com/pygame/pygame).
 
