@@ -2,6 +2,8 @@
 name: pygbag_build
 on: [workflow_dispatch]
 
+permissions:
+  contents: read
 
 jobs:
   build-pygbag:
