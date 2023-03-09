@@ -23,7 +23,6 @@ async def main() -> None:
         env.reset()
         env.render()  # need to render the environment before pygame can take user input
 
-
         iter = 0
 
         for agent in env.agent_iter():
