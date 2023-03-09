@@ -1,0 +1,5 @@
+numpy==1.23.5
+pettingzoo==1.22.3
+asyncio==3.4.3
+pygbag==0.7.1
+token-utils==0.1.8

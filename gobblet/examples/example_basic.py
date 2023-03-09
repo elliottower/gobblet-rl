@@ -61,8 +61,7 @@ if __name__ == "__main__":
             )
 
             if args.render_mode == "human":
-                time.sleep(
-                    0.5
-                )  # Wait .5 seconds between moves so the user can follow the sequence of moves
+                # Wait .5 seconds between moves so the user can follow the sequence of moves
+                time.sleep(0.5)
 
             env.step(action)
