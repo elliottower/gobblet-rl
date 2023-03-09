@@ -13,7 +13,7 @@ Allows for users to play in the same environment, and even play against RL agent
 <h1 style="text-align: center;width: 80%">
     <img alt="Gobblet board game" src="./assets/gobblet.jpg" width="45%">
     &nbsp; &nbsp; &nbsp; &nbsp;
-    <img alt="Gobblet-rl game rendered with Pygame" src="./asets/gobblet_pygame.gif" width="45%">
+    <img alt="Gobblet-rl game rendered with Pygame" src="./assets/gobblet_pygame.gif" width="45%">
 
 </h1>
  
