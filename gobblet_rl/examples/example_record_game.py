@@ -41,7 +41,7 @@ def get_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    from gobblet_rlimport gobblet_v1
+    from gobblet_rl import gobblet_v1
 
     args = get_args()
 

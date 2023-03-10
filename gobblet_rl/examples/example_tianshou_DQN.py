@@ -368,7 +368,9 @@ def train_selfplay(
         # Render a single game between the learned policy and itself
         watch_selfplay(args, policy.policies[agents_list[0]])
 
-    model_save_path = os.path.join(args.logdir, "gobblet_rl", "dqn-selfplay", "policy.pth")
+    model_save_path = os.path.join(
+        args.logdir, "gobblet_rl", "dqn-selfplay", "policy.pth"
+    )
     torch.save(policy.policies[agents_list[0]].state_dict(), model_save_path)
 
     return result, policy.policies[agents_list[0]]
@@ -417,7 +419,9 @@ def train_agent(
         if hasattr(args, "model_save_path"):
             model_save_path = args.model_save_path
         else:
-            model_save_path = os.path.join(args.logdir, "gobblet_rl", "dqn", "policy.pth")
+            model_save_path = os.path.join(
+                args.logdir, "gobblet_rl", "dqn", "policy.pth"
+            )
         torch.save(
             policy.policies[agents_list[args.agent_id - 1]].state_dict(),
             model_save_path,
