@@ -20,6 +20,11 @@ classifiers = [
 ]
 dynamic=["version", "dependencies"]
 
+[tool.setuptools.packages.find]
+where = ["gobblet"]
+exclude = ["examples*"]
+namespaces = false
+
 [tool.setuptools.dynamic]
 version = {attr = "gobblet.__version__"}
 dependencies = {file = ["requirements.txt"]}
