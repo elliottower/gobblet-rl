@@ -22,15 +22,21 @@ def test_reset(env):
 
 def test_reset_starting(env):
     "Verify that reset() sets the board state to the correct starting position"
+    raw_env = gobblet_v1.raw_env(render_mode=None)
+    raw_env.reset()
+    assert (raw_env.board.squares == np.zeros(27)).all()
+    raw_env.close()
 
-    assert (env.board.squares == np.zeros(27)).all()
 
-
+# PettingZoo Tests
 def test_api(env):
     "Test the env using PettingZoo's API test function"
     pettingzoo.test.api_test(env, num_cycles=10, verbose_progress=False)
 
 
+@pytest.mark.skip(
+    reason="gobblet is an AEC environment and turns need to be taken in order (or else illegal moves can occur)"
+)
 def test_parallel_api(env):
     env = gobblet_v1.parallel_env(render_mode=None)
     pettingzoo.test.parallel_api_test(env, num_cycles=1000)
@@ -45,9 +51,10 @@ def test_seed_raw(env):
 
 
 @pytest.mark.skip(
-    reason="parallel envs are not currently used, therefore there is no max_cycles argument "
+    reason="gobblet is an AEC environment so it does not have the attribute max_cylces"
 )
 def test_max_cycles(env):
+    env = gobblet_v1
     pettingzoo.test.max_cycles_test(env)
 
 
