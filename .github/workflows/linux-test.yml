@@ -28,8 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install python3-opengl xvfb
-          pip install -e .[all]
-          pip install -e .[tests]
+          pip install -e .
           AutoROM -v
       - name: Source distribution test
         run: |
