@@ -3,13 +3,13 @@ import pettingzoo
 import pettingzoo.test
 import pytest
 
-from gobblet import gobblet_v1
+from gobblet_rl import gobblet_v1
 
 
 # Note: raw_env is required in order to test the board state, as env() only allows observations
 @pytest.fixture(scope="function")
 def env():
-    env = gobblet_v1.raw_env()
+    env = gobblet_v1.raw_env(render_mode=None)
     env.reset()
     yield env
     env.close()
@@ -32,7 +32,7 @@ def test_api(env):
 
 
 def test_parallel_api(env):
-    env = gobblet_v1.parallel_env()
+    env = gobblet_v1.parallel_env(render_mode=None)
     pettingzoo.test.parallel_api_test(env, num_cycles=1000)
 
 
@@ -54,10 +54,13 @@ def test_max_cycles(env):
 # Note: this test sometimes fails due to empty possible actions list, re-run if it fails
 def test_performance_benchmark(env):
     "Run PettingZoo performance benchmark on the env"
-    env = gobblet_v1.env()
+    env = gobblet_v1.env(render_mode=None)
     pettingzoo.test.performance_benchmark(env)
 
 
+@pytest.mark.skip(
+    reason="test_save_obs is not compatible with Dict type observations (Dict('action_mask': Box, 'observation': Box))"
+)
 def test_save_obs(env):
     pettingzoo.test.test_save_obs(env)
 

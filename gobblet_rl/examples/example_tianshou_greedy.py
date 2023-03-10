@@ -9,10 +9,10 @@ from tianshou.env import DummyVectorEnv
 from tianshou.env.pettingzoo_env import PettingZooEnv
 from tianshou.policy import BasePolicy, MultiAgentPolicyManager
 
-from gobblet import gobblet_v1
-from gobblet.game.collector_manual_policy import ManualPolicyCollector
-from gobblet.game.greedy_policy_tianshou import GreedyPolicy
-from gobblet.game.utils import GIFRecorder
+from gobblet_rl import gobblet_v1
+from gobblet_rl.game.collector_manual_policy import ManualPolicyCollector
+from gobblet_rl.game.greedy_policy_tianshou import GreedyPolicy
+from gobblet_rl.game.utils import GIFRecorder
 
 
 def get_parser() -> argparse.ArgumentParser:

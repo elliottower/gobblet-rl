@@ -97,7 +97,6 @@ dependencies:
       - bleach==6.0.0
       - blessed==1.19.1
       - build==0.10.0
-      - chess==1.7.0
       - colorful==0.5.5
       - contourpy==1.0.7
       - cycler==0.11.0

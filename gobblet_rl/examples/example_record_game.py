@@ -3,6 +3,8 @@ import argparse
 import numpy as np
 import pygame
 
+from gobblet_rl.game.utils import GIFRecorder
+
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -29,6 +31,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--screen-width", type=int, default=640, help="Width of pygame screen in pixels"
     )
+
     return parser
 
 
@@ -38,7 +41,7 @@ def get_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    from gobblet import gobblet_v1
+    from gobblet_rlimport gobblet_v1
 
     args = get_args()
 
@@ -50,7 +53,14 @@ if __name__ == "__main__":
     env = gobblet_v1.env(render_mode="human", args=args)
     env.reset()
 
-    manual_policy = gobblet_v1.ManualGobbletPolicy(env)
+    recorder = GIFRecorder()
+
+    env.render()  # need to render the environment before pygame can take user input
+
+    # Record the first frame (empty board)
+    recorder.capture_frame(env.unwrapped.screen)
+
+    manual_policy = gobblet_v1.ManualGobbletPolicy(env, recorder=recorder)
 
     for agent in env.agent_iter():
         clock.tick(env.metadata["render_fps"])
@@ -59,6 +69,9 @@ if __name__ == "__main__":
 
         if termination or truncation:
             print(f"Agent: ({agent}), Reward: {reward}, info: {info}")
+
+            recorder.end_recording(env.unwrapped.screen)
+
             env.step(None)
             continue
 

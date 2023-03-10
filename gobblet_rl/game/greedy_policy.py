@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 import numpy as np
 
-from gobblet.game.board import Board
+from gobblet_rl.game.board import Board
 
 
 class GreedyGobbletPolicy:

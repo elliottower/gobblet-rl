@@ -19,10 +19,10 @@ from tianshou.utils import TensorboardLogger
 from tianshou.utils.net.common import Net
 from torch.utils.tensorboard import SummaryWriter
 
-from gobblet import gobblet_v1
-from gobblet.game.collector_manual_policy import ManualPolicyCollector
-from gobblet.game.greedy_policy_tianshou import GreedyPolicy
-from gobblet.game.utils import GIFRecorder
+from gobblet_rl import gobblet_v1
+from gobblet_rl.game.collector_manual_policy import ManualPolicyCollector
+from gobblet_rl.game.greedy_policy_tianshou import GreedyPolicy
+from gobblet_rl.game.utils import GIFRecorder
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -276,7 +276,7 @@ def train_selfplay(
         )
 
     # Load initial opponent from file
-    # path = os.path.join(args.logdir, 'gobblet', 'dqn', 'policy.pth')
+    # path = os.path.join(args.logdir, 'gobblet_rl', 'dqn', 'policy.pth')
     # agent_fixed.load_state_dict(torch.load(path))
 
     # ======== agent setup =========
@@ -296,7 +296,7 @@ def train_selfplay(
     train_collector.collect(n_step=args.batch_size * args.training_num)
 
     # ======== tensorboard logging setup =========
-    log_path = os.path.join(args.logdir, "gobblet", "dqn-selfplay")
+    log_path = os.path.join(args.logdir, "gobblet_rl", "dqn-selfplay")
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
     logger = TensorboardLogger(writer)
@@ -306,7 +306,7 @@ def train_selfplay(
             model_save_path = args.model_save_path
         else:
             model_save_path = os.path.join(
-                args.logdir, "gobblet", "dqn-selfplay", "policy.pth"
+                args.logdir, "gobblet_rl", "dqn-selfplay", "policy.pth"
             )
         torch.save(
             policy.policies[agents_list[args.agent_id - 1]].state_dict(),
@@ -368,7 +368,7 @@ def train_selfplay(
         # Render a single game between the learned policy and itself
         watch_selfplay(args, policy.policies[agents_list[0]])
 
-    model_save_path = os.path.join(args.logdir, "gobblet", "dqn-selfplay", "policy.pth")
+    model_save_path = os.path.join(args.logdir, "gobblet_rl", "dqn-selfplay", "policy.pth")
     torch.save(policy.policies[agents_list[0]].state_dict(), model_save_path)
 
     return result, policy.policies[agents_list[0]]
@@ -407,7 +407,7 @@ def train_agent(
     train_collector.collect(n_step=args.batch_size * args.training_num)
 
     # ======== tensorboard logging setup =========
-    log_path = os.path.join(args.logdir, "gobblet", "dqn")
+    log_path = os.path.join(args.logdir, "gobblet_rl", "dqn")
     writer = SummaryWriter(log_path)
     writer.add_text("args", str(args))
     logger = TensorboardLogger(writer)
@@ -417,7 +417,7 @@ def train_agent(
         if hasattr(args, "model_save_path"):
             model_save_path = args.model_save_path
         else:
-            model_save_path = os.path.join(args.logdir, "gobblet", "dqn", "policy.pth")
+            model_save_path = os.path.join(args.logdir, "gobblet_rl", "dqn", "policy.pth")
         torch.save(
             policy.policies[agents_list[args.agent_id - 1]].state_dict(),
             model_save_path,

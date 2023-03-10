@@ -11,9 +11,9 @@ from ray.rllib.utils.framework import try_import_torch
 from ray.tune.logger import pretty_print
 from ray.tune.registry import register_env
 
-from gobblet import gobblet_v1
-from gobblet.game.utils import get_project_root
-from gobblet.models.action_mask_model import TorchActionMaskModel
+from gobblet_rl import gobblet_v1
+from gobblet_rl.game.utils import get_project_root
+from gobblet_rl.models.action_mask_model import TorchActionMaskModel
 
 torch, nn = try_import_torch()
 

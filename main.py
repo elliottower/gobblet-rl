@@ -6,7 +6,7 @@ sys.path.append("modules")
 
 import numpy as np  # noqa: E402 F401
 
-from gobblet import gobblet_v1  # noqa: E402
+from gobblet_rl import gobblet_v1  # noqa: E402
 
 PLAYER = 0
 DEPTH = 2

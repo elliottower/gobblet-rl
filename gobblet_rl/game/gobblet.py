@@ -9,7 +9,7 @@
 
 This environment is part of the <a href='..'>classic environments</a>. Please read that page first for general information.
 
-| Import             | `from gobblet import gobblet_v1`   |
+| Import             | `from gobblet_rl import gobblet_v1`   |
 |--------------------|------------------------------------|
 | Actions            | Discrete                           |
 | Parallel API       | Yes                                |
@@ -428,8 +428,8 @@ class raw_env(AECEnv):
             print(top + "  " + top + "  " + top)
             print()
 
-        elif self.render_mode == "human":
-            # Adapted from PettingZoo connect_four.py (keep width equal to height or things will not scale properly)
+        else:
+            # Adapted screen logic from PettingZoo connect_four.py
             if self.render_mode == "human":
                 if self.screen is None:
                     pygame.init()
@@ -562,9 +562,10 @@ class raw_env(AECEnv):
                             ),
                         )
 
-            pygame.display.update()
-        elif self.render_mode == "rgb_array":
+            if self.render_mode == "human":
+                pygame.display.update()
             observation = np.array(pygame.surfarray.pixels3d(self.screen))
+
         return (
             np.transpose(observation, axes=(1, 0, 2))
             if self.render_mode == "rgb_array"

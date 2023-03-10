@@ -5,7 +5,7 @@ from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.annotations import override
 from ray.rllib.utils.typing import TensorStructType, TensorType
 
-from gobblet.game.greedy_policy import GreedyGobbletPolicy
+from gobblet_rl.game.greedy_policy import GreedyGobbletPolicy
 
 
 class GreedyPolicy(RandomPolicy):

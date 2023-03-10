@@ -3,7 +3,7 @@ import time
 
 import numpy as np
 
-from gobblet import gobblet_v1
+from gobblet_rl import gobblet_v1
 
 
 def get_parser() -> argparse.ArgumentParser:

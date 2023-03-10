@@ -40,7 +40,7 @@ pip install -e .
 In a Python shell, run the following:
 
 ```python
-from gobblet import gobblet_v1
+from gobblet_rl import gobblet_v1
 
 env = gobblet_v1.env()
 ```

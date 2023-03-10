@@ -6,7 +6,7 @@ from numpy import ndarray
 from tianshou.data import Batch
 from tianshou.policy import BasePolicy
 
-from gobblet.game.greedy_policy import GreedyGobbletPolicy
+from gobblet_rl.game.greedy_policy import GreedyGobbletPolicy
 
 
 class GreedyPolicy(BasePolicy):

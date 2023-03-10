@@ -29,6 +29,9 @@ namespaces = false
 version = {attr = "gobblet.__version__"}
 dependencies = {file = ["requirements.txt"]}
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [project.urls]
 "Homepage" = "https://github.com/elliottower/gobblet-rl/"
 "Bug Tracker" = "https://github.com/elliottower/gobblet/issues"
