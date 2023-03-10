@@ -16,7 +16,7 @@ class GreedyGobbletPolicy:
         self.board = None
         self.depth = depth
         self.rng = np.random.default_rng()
-        self.prev_actions = []
+        self.prev_actions = {i: [] for i in range(2)}
 
     def compute_actions_rllib(self, obs_batch):
         observations = obs_batch["observation"]
@@ -208,11 +208,11 @@ class GreedyGobbletPolicy:
                                         break  # If there is nothing we can do to prevent them from winning in depth3, we have to do one of the moves
 
         # If we have not selected an action, or have already done it in the last 3 turns, choose randomly
-        if chosen_action is None or chosen_action in self.prev_actions[-3:]:
+        if chosen_action is None or chosen_action in self.prev_actions[agent_index][-3:]:
             # Choose randomly between possible actions:
             # chosen_action = self.rng.choice(actions_depth1)
             chosen_action = np.random.choice(actions_depth1)
             # print(f"Choosing randomly between possible actions: {actions_depth1} --> {chosen_action}")
-        self.prev_actions.append(chosen_action)
+        self.prev_actions[agent_index].append(chosen_action)
         act = np.array(chosen_action)
         return act

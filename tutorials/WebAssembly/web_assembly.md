@@ -1,7 +1,8 @@
-# Tutorial
+# Tutorial: WebAssembly
 This tutorial provides a working example of using Pygame with WebAssembly to run and render a Gobblet environment locally in the browser. 
 
-The script displays a game of chess between two random agents. 
+The script adapts the Greedy Agent tutorial code to run in the web, displaying games between two greedy agents. 
+
 Features such as loading trained models or using interactive environments may be added in the future. 
 
 It can be deployed to github-pages via a workflow (see `.github/workflows/pygbag.yml`).
@@ -20,8 +21,8 @@ Pygbag works via a virtual environment, and all dependencies must be downloaded 
 
 ## Usage:
 
-1. (Optional) Create a virtual environment: `conda create -n pygame-wasm python=3.10`
-2. (Optional) Activate the virtual environment: `conda activate pygame-wasm`
+1. (Optional) Create a virtual environment: `conda create -n wasm python=3.10`
+2. (Optional) Activate the virtual environment: `conda activate wasm`
 3. Install requirements: `pip install -r requirements.txt`
 4. Run `bash install.sh` in order to download and unzip dependencies to be used in the WASM virtual machine.
 5. Change directory to parent of root project directory: `cd ../../..`  

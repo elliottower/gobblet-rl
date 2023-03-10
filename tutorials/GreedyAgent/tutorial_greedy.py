@@ -1,10 +1,5 @@
-import asyncio
-import sys
 import time
-
-sys.path.append("modules")
-
-import numpy as np  # noqa: E402 F401
+import numpy as np
 
 from gobblet import gobblet_v1  # noqa: E402
 
@@ -12,14 +7,13 @@ PLAYER = 0
 DEPTH = 2
 RENDER_MODE = "human"
 
-
-async def main() -> None:
+if __name__ == "__main__":
     env = gobblet_v1.env(render_mode="human", args=None)
 
     greedy_policy = gobblet_v1.GreedyGobbletPolicy(depth=DEPTH)
 
-    # Continue to display games between greedy agents
-    while True:
+    # Render 3 games between greedy agents
+    for _ in range(3):
         env.reset()
         env.render()  # need to render the environment before pygame can take user input
 
@@ -52,9 +46,4 @@ async def main() -> None:
 
             env.step(action)
 
-            await asyncio.sleep(0)  # Very important, and keep it 0
             iter += 1
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

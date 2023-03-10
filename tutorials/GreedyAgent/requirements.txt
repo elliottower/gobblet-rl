@@ -1,0 +1,5 @@
+gym==0.23.1
+gymnasium==0.27.1
+numpy==1.22.0
+PettingZoo==1.22.3
+pygame==2.1.2
