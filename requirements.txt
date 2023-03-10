@@ -4,6 +4,7 @@ numpy==1.22.0
 PettingZoo==1.22.3
 pygame==2.1.2
 pytest==7.1.2
+pytest-cov==4.0.0
 ray==2.2.0
 tianshou==0.4.11
 torch==1.12.1
