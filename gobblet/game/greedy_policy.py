@@ -208,7 +208,10 @@ class GreedyGobbletPolicy:
                                         break  # If there is nothing we can do to prevent them from winning in depth3, we have to do one of the moves
 
         # If we have not selected an action, or have already done it in the last 3 turns, choose randomly
-        if chosen_action is None or chosen_action in self.prev_actions[agent_index][-3:]:
+        if (
+            chosen_action is None
+            or chosen_action in self.prev_actions[agent_index][-3:]
+        ):
             # Choose randomly between possible actions:
             # chosen_action = self.rng.choice(actions_depth1)
             chosen_action = np.random.choice(actions_depth1)

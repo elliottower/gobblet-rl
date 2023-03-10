@@ -1,4 +1,5 @@
 import time
+
 import numpy as np
 
 from gobblet import gobblet_v1  # noqa: E402
